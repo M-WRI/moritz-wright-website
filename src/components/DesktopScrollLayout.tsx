@@ -221,7 +221,7 @@ export function DesktopScrollLayout() {
         </section>
         <section
           ref={gallerySectionRef}
-          className="relative z-20 grid w-full gap-32 bg-white px-4 py-24 md:px-8"
+          className="relative z-20 grid w-full gap-32 px-4 py-24 md:px-8"
         >
           <div data-gallery-row className="grid grid-cols-5 gap-4">
             <div
