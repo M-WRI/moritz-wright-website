@@ -129,42 +129,47 @@ export function DesktopScrollLayout() {
 
   return (
     <>
-      <div>
-        <section ref={heroSectionRef} className="h-dvh w-full bg-[#ef4444]">
-          <div className="absolute right-6 top-7 z-20 max-w-[min(94vw,56rem)] text-right lg:right-12 lg:top-9 xl:right-16 xl:top-11">
+      <div className="overflow-x-clip">
+        <section
+          ref={heroSectionRef}
+          className="h-dvh min-h-dvh w-full border-0 bg-[#ef4444] shadow-none ring-0 outline-none"
+        >
+          <div className="absolute right-6 top-7 z-20 max-w-[min(94vw,56rem)] text-right min-[765px]:right-16 min-[765px]:top-11">
             <h1 className="font-black uppercase tracking-[-0.06em]">
-              <span className="block text-[65px] leading-[0.95]">
+              <span className="hero-type block leading-[0.95]">
                 It&apos;s me —
               </span>
-              <span className="mt-1 block text-[65px] leading-[0.88]">
+              <span className="hero-type mt-1 block leading-[0.88]">
                 Moritz Wright
               </span>
             </h1>
           </div>
           <div
             ref={rolesHeadlineRef}
-            className="fixed right-6 top-[22vh] z-20 max-w-[min(92vw,48rem)] origin-top-right text-right font-black uppercase tracking-[-0.06em] lg:right-12 xl:right-16"
+            className="fixed right-6 top-[95px] z-20 max-w-[min(92vw,48rem)] origin-top-right text-right font-black uppercase tracking-[-0.06em] min-[765px]:right-16 min-[765px]:top-[170px]"
           >
             <div className="space-y-0 leading-none">
-              <p className="text-[65px] leading-[0.92]">Software engineer</p>
-              <p className="text-[65px] leading-[0.92]">Designer</p>
+              <p className="hero-type leading-[0.92]">Software engineer</p>
+              <p className="hero-type leading-[0.92]">Designer</p>
             </div>
           </div>
-          <div className="absolute bottom-0 left-0 z-10 w-[min(36vw,380px)] lg:w-[min(34vw,400px)]">
-            <PortraitPlaceholder className="aspect-3/4 w-full shadow-2xl ring-2 ring-black/15" />
+          <div
+            className="absolute z-10 max-[765px]:inset-0 max-[765px]:flex max-[765px]:items-center max-[765px]:justify-center min-[766px]:bottom-0 min-[766px]:left-0 min-[766px]:w-[min(34vw,400px)]"
+          >
+            <PortraitPlaceholder className="shadow-2xl max-[765px]:aspect-auto max-[765px]:h-[80%] max-[765px]:w-[80%] min-[766px]:aspect-3/4 min-[766px]:w-full" />
           </div>
           <div
             ref={mwSignatureRef}
-            className="fixed bottom-[3.75rem] right-6 z-20 origin-bottom-right font-black uppercase leading-none tracking-[-0.06em] lg:right-12 xl:right-16"
+            className="fixed bottom-[3.75rem] right-6 z-20 origin-bottom-right font-black uppercase leading-none tracking-[-0.06em] min-[765px]:right-16"
           >
-            <p className="whitespace-nowrap text-[65px] text-black">
+            <p className="hero-type whitespace-nowrap text-black">
               MW — &apos;{yearShort}
             </p>
           </div>
         </section>
         <section className="h-dvh w-full bg-white"></section>
       </div >
-      <footer className="fixed bottom-0 left-0 right-0 z-30 flex items-end justify-between gap-4 border-t border-black/20 px-5 py-3.5 lg:px-10 lg:py-4 xl:px-12">
+      <footer className="fixed bottom-0 left-0 right-0 z-30 flex items-end justify-between gap-4 px-5 py-3.5 lg:px-12 lg:py-4">
         <p className="min-w-0 text-left text-[11px] font-semibold leading-tight text-black lg:text-xs">
           Moritz Wright — {yearShort}
         </p>
