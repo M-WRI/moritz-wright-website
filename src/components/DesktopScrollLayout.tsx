@@ -26,11 +26,18 @@ function PortraitPlaceholder({ className = "" }: { className?: string }) {
   );
 }
 
+/** 3-up: grow left → right → middle (DOM indices 0, 2, 1) */
+function projectCellOrder(count: number): number[] {
+  if (count === 3) return [0, 2, 1];
+  return Array.from({ length: count }, (_, i) => i);
+}
+
 export function DesktopScrollLayout() {
   const yearShort = String(YEAR).slice(-2);
   const heroSectionRef = useRef<HTMLElement>(null);
   const mwSignatureRef = useRef<HTMLDivElement>(null);
   const rolesHeadlineRef = useRef<HTMLDivElement>(null);
+  const gallerySectionRef = useRef<HTMLElement>(null);
 
   useLayoutEffect(() => {
     const el = heroSectionRef.current;
@@ -127,12 +134,57 @@ export function DesktopScrollLayout() {
     };
   }, []);
 
+  useLayoutEffect(() => {
+    const gallery = gallerySectionRef.current;
+    if (!gallery) return;
+
+    const ctx = gsap.context(() => {
+      const rows = gallery.querySelectorAll<HTMLElement>("[data-gallery-row]");
+      rows.forEach((row) => {
+        const cells = row.querySelectorAll<HTMLElement>("[data-project-cell]");
+        const n = cells.length;
+        if (n === 0) return;
+
+        const order = projectCellOrder(n);
+        gsap.set(cells, { scale: 0.5, transformOrigin: "50% 50%" });
+
+        /** Scroll range ends when the last-in-sequence cell reaches scale 1 at its top @ 50vh */
+        const lastInSequence = cells[order[order.length - 1]];
+
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: row,
+            start: "top bottom",
+            endTrigger: lastInSequence,
+            end: "top 50%",
+            scrub: 1,
+            invalidateOnRefresh: true,
+          },
+        });
+
+        const stagger = 0.2;
+        const piece = 0.28;
+        order.forEach((cellIndex, i) => {
+          tl.to(
+            cells[cellIndex],
+            { scale: 1, duration: piece, ease: "none" },
+            i * stagger,
+          );
+        });
+      });
+
+      ScrollTrigger.refresh();
+    }, gallery);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
     <>
       <div className="overflow-x-clip">
         <section
           ref={heroSectionRef}
-          className="h-dvh min-h-dvh w-full border-0 bg-[#ef4444] shadow-none ring-0 outline-none"
+          className="relative z-0 h-dvh min-h-dvh w-full border-0 bg-[#ef4444] shadow-none ring-0 outline-none"
         >
           <div className="absolute right-6 top-7 z-20 max-w-[min(94vw,56rem)] text-right min-[765px]:right-16 min-[765px]:top-11">
             <h1 className="font-black uppercase tracking-[-0.06em]">
@@ -146,7 +198,7 @@ export function DesktopScrollLayout() {
           </div>
           <div
             ref={rolesHeadlineRef}
-            className="fixed right-6 top-[95px] z-20 max-w-[min(92vw,48rem)] origin-top-right text-right font-black uppercase tracking-[-0.06em] min-[765px]:right-16 min-[765px]:top-[170px]"
+            className="fixed right-6 top-[95px] z-10 max-w-[min(92vw,48rem)] origin-top-right text-right font-black uppercase tracking-[-0.06em] min-[765px]:right-16 min-[765px]:top-[170px]"
           >
             <div className="space-y-0 leading-none">
               <p className="hero-type leading-[0.92]">Software engineer</p>
@@ -160,14 +212,84 @@ export function DesktopScrollLayout() {
           </div>
           <div
             ref={mwSignatureRef}
-            className="fixed bottom-[3.75rem] right-6 z-20 origin-bottom-right font-black uppercase leading-none tracking-[-0.06em] min-[765px]:right-16"
+            className="fixed bottom-[3.75rem] right-6 z-10 origin-bottom-right font-black uppercase leading-none tracking-[-0.06em] min-[765px]:right-16"
           >
             <p className="hero-type whitespace-nowrap text-black">
               MW — &apos;{yearShort}
             </p>
           </div>
         </section>
-        <section className="h-dvh w-full bg-white"></section>
+        <section
+          ref={gallerySectionRef}
+          className="relative z-20 grid w-full gap-32 bg-white px-4 py-24 md:px-8"
+        >
+          <div data-gallery-row className="grid grid-cols-5 gap-4">
+            <div
+              data-project-cell
+              className="col-span-1 w-full min-h-0 will-change-transform"
+            >
+              <div className="aspect-square w-full bg-red-500" />
+            </div>
+            <div
+              data-project-cell
+              className="col-span-1 w-full min-h-0 will-change-transform"
+            >
+              <div className="aspect-square w-full bg-red-500" />
+            </div>
+            <div
+              data-project-cell
+              className="col-span-2 w-full min-h-0 will-change-transform"
+            >
+              <div className="aspect-square w-full bg-red-500" />
+            </div>
+          </div>
+          <div data-gallery-row className="grid grid-cols-5 gap-4">
+            <div
+              data-project-cell
+              className="col-span-1 w-full min-h-0 will-change-transform"
+            >
+              <div className="aspect-square w-full bg-red-500" />
+            </div>
+            <div
+              data-project-cell
+              className="col-span-1 w-full min-h-0 will-change-transform"
+            >
+              <div className="aspect-square w-full bg-red-500" />
+            </div>
+            <div
+              data-project-cell
+              className="col-span-1 w-full min-h-0 will-change-transform"
+            >
+              <div className="aspect-square w-full bg-neutral-200" />
+            </div>
+            <div
+              data-project-cell
+              className="col-span-2 w-full min-h-0 will-change-transform"
+            >
+              <div className="aspect-square w-full bg-red-500" />
+            </div>
+          </div>
+          <div data-gallery-row className="grid grid-cols-5 gap-4">
+            <div
+              data-project-cell
+              className="col-span-1 w-full min-h-0 will-change-transform"
+            >
+              <div className="aspect-square w-full bg-neutral-200" />
+            </div>
+            <div
+              data-project-cell
+              className="col-span-3 w-full min-h-0 will-change-transform"
+            >
+              <div className="aspect-square w-full bg-red-500" />
+            </div>
+            <div
+              data-project-cell
+              className="col-span-1 w-full min-h-0 will-change-transform"
+            >
+              <div className="aspect-square w-full bg-neutral-200" />
+            </div>
+          </div>
+        </section>
       </div >
       <footer className="fixed bottom-0 left-0 right-0 z-30 flex items-end justify-between gap-4 px-5 py-3.5 lg:px-12 lg:py-4">
         <p className="min-w-0 text-left text-[11px] font-semibold leading-tight text-black lg:text-xs">
