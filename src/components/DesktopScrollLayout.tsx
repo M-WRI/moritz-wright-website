@@ -1,5 +1,7 @@
 "use client";
 
+import type { GalleryRowView } from "@/lib/sanity/loadGallery";
+import Image from "next/image";
 import Link from "next/link";
 import Lenis from "lenis";
 import { useLayoutEffect, useRef } from "react";
@@ -32,7 +34,23 @@ function projectCellOrder(count: number): number[] {
   return Array.from({ length: count }, (_, i) => i);
 }
 
-export function DesktopScrollLayout() {
+const COL_SPAN_CLASS: Record<number, string> = {
+  1: "col-span-1",
+  2: "col-span-2",
+  3: "col-span-3",
+  4: "col-span-4",
+  5: "col-span-5",
+};
+
+function cellColClass(span: number): string {
+  return COL_SPAN_CLASS[span] ?? COL_SPAN_CLASS[1];
+}
+
+export function DesktopScrollLayout({
+  galleryRows = [],
+}: {
+  galleryRows?: GalleryRowView[];
+}) {
   const yearShort = String(YEAR).slice(-2);
   const heroSectionRef = useRef<HTMLElement>(null);
   const mwSignatureRef = useRef<HTMLDivElement>(null);
@@ -223,72 +241,38 @@ export function DesktopScrollLayout() {
           ref={gallerySectionRef}
           className="relative z-20 grid w-full gap-32 px-4 py-24 md:px-8"
         >
-          <div data-gallery-row className="grid grid-cols-5 gap-4">
+          {galleryRows.map((row) => (
             <div
-              data-project-cell
-              className="col-span-1 w-full min-h-0 will-change-transform"
+              key={row.key}
+              data-gallery-row
+              className="grid grid-cols-5 gap-4"
             >
-              <div className="aspect-square w-full bg-red-500" />
+              {row.cells.map((cell) => (
+                <div
+                  key={cell.key}
+                  data-project-cell
+                  className={`${cellColClass(cell.colSpan)} w-full min-h-0 will-change-transform`}
+                >
+                  <div className="relative aspect-square w-full overflow-hidden bg-neutral-200">
+                    {cell.imageUrl ? (
+                      <Image
+                        src={cell.imageUrl}
+                        alt={cell.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 45vw, 18vw"
+                      />
+                    ) : (
+                      <div
+                        className="absolute inset-0 bg-neutral-200"
+                        aria-hidden
+                      />
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-            <div
-              data-project-cell
-              className="col-span-1 w-full min-h-0 will-change-transform"
-            >
-              <div className="aspect-square w-full bg-red-500" />
-            </div>
-            <div
-              data-project-cell
-              className="col-span-2 w-full min-h-0 will-change-transform"
-            >
-              <div className="aspect-square w-full bg-red-500" />
-            </div>
-          </div>
-          <div data-gallery-row className="grid grid-cols-5 gap-4">
-            <div
-              data-project-cell
-              className="col-span-1 w-full min-h-0 will-change-transform"
-            >
-              <div className="aspect-square w-full bg-red-500" />
-            </div>
-            <div
-              data-project-cell
-              className="col-span-1 w-full min-h-0 will-change-transform"
-            >
-              <div className="aspect-square w-full bg-red-500" />
-            </div>
-            <div
-              data-project-cell
-              className="col-span-1 w-full min-h-0 will-change-transform"
-            >
-              <div className="aspect-square w-full bg-neutral-200" />
-            </div>
-            <div
-              data-project-cell
-              className="col-span-2 w-full min-h-0 will-change-transform"
-            >
-              <div className="aspect-square w-full bg-red-500" />
-            </div>
-          </div>
-          <div data-gallery-row className="grid grid-cols-5 gap-4">
-            <div
-              data-project-cell
-              className="col-span-1 w-full min-h-0 will-change-transform"
-            >
-              <div className="aspect-square w-full bg-neutral-200" />
-            </div>
-            <div
-              data-project-cell
-              className="col-span-3 w-full min-h-0 will-change-transform"
-            >
-              <div className="aspect-square w-full bg-red-500" />
-            </div>
-            <div
-              data-project-cell
-              className="col-span-1 w-full min-h-0 will-change-transform"
-            >
-              <div className="aspect-square w-full bg-neutral-200" />
-            </div>
-          </div>
+          ))}
         </section>
       </div >
       <footer className="fixed bottom-0 left-0 right-0 z-30 flex items-end justify-between gap-4 px-5 py-3.5 lg:px-12 lg:py-4">
