@@ -11,8 +11,9 @@ import { useLayoutEffect, useRef, type CSSProperties } from "react";
 gsap.registerPlugin(ScrollTrigger);
 
 type Size = "large" | "medium" | "small";
+type Slot = { size: Size; column: string; shift: string };
 
-const SLOTS: Array<{ size: Size; column: string; shift: string }> = [
+const SLOTS: Slot[] = [
   { size: "large", column: "1 / span 4", shift: "0%" },
   { size: "small", column: "6 / span 2", shift: "48%" },
   { size: "medium", column: "9 / span 3", shift: "-16%" },
@@ -48,7 +49,7 @@ const LOOP_MOUSE_AMP: Record<Size, number> = {
   small: 24,
 };
 
-const LOOP_SLOTS: Array<{ size: Size; column: string; shift: string }> = [
+const LOOP_SLOTS: Slot[] = [
   { size: "large", column: "1 / span 4", shift: "4%" },
   { size: "small", column: "10 / span 2", shift: "16%" },
   { size: "medium", column: "9 / span 3", shift: "-10%" },
@@ -100,10 +101,10 @@ function PosterSet({
                       alt={project.title}
                       fill
                       className="object-cover grayscale transition duration-700 group-hover:grayscale-0"
-                      sizes="(max-width: 768px) 90vw, 32vw"
+                      sizes="(max-width: 768px) 42vw, 32vw"
                     />
                   </div>
-                  <div className="mt-2 flex items-baseline justify-between gap-3">
+                  <div className="mt-2 hidden items-baseline justify-between gap-3 md:flex">
                     <h3 className="text-[13px] tracking-[-0.03em]">
                       {project.title}
                     </h3>
@@ -124,35 +125,24 @@ function PosterSet({
 function applyParallax(
   root: HTMLElement,
   reduce: boolean,
-  desktop: boolean,
   factors: Record<Size, number>,
 ) {
-  if (reduce || !desktop) {
+  if (reduce) {
     root.querySelectorAll<HTMLElement>("[data-poster-par]").forEach((par) => {
       gsap.set(par, { y: 0 });
     });
     return;
   }
 
-  const vh = window.innerHeight;
-  root.querySelectorAll<HTMLElement>("[data-poster]").forEach((fig) => {
-    const size = fig.dataset.size as Size;
-    const par = fig.querySelector<HTMLElement>("[data-poster-par]");
-    const factor = factors[size];
-    if (!par || !factor) return;
-    const rect = fig.getBoundingClientRect();
-    const y = gsap.utils.clamp(
-      -vh * factor,
-      vh * factor,
-      gsap.utils.mapRange(
-        vh,
-        -rect.height,
-        -vh * factor,
-        vh * factor,
-        rect.top,
-      ),
-    );
-    gsap.set(par, { y });
+  root.querySelectorAll<HTMLElement>("[data-loop-set]").forEach((set) => {
+    const setY = Number(gsap.getProperty(set, "y")) || 0;
+    set.querySelectorAll<HTMLElement>("[data-poster]").forEach((fig) => {
+      const size = fig.dataset.size as Size;
+      const par = fig.querySelector<HTMLElement>("[data-poster-par]");
+      const factor = factors[size];
+      if (!par || !factor) return;
+      gsap.set(par, { y: setY * factor });
+    });
   });
 }
 
@@ -228,10 +218,73 @@ export function ParallaxGallery({
     };
 
     const pos = { tx: 0, ty: 0, x: 0, y: 0 };
+    const tiltBase = { beta: null as number | null, gamma: null as number | null };
+    const TILT_RANGE = 18;
 
     const onMove = (event: PointerEvent) => {
+      if (event.pointerType === "touch") return;
       pos.tx = gsap.utils.mapRange(0, window.innerWidth, 1, -1, event.clientX);
       pos.ty = gsap.utils.mapRange(0, window.innerHeight, 1, -1, event.clientY);
+    };
+
+    const onOrient = (event: DeviceOrientationEvent) => {
+      if (event.gamma == null || event.beta == null) return;
+
+      const angle =
+        (screen.orientation?.angle ??
+          (window as Window & { orientation?: number }).orientation ??
+          0) || 0;
+      let gamma = event.gamma;
+      let beta = event.beta;
+
+      if (angle === 90) {
+        const nextGamma = beta;
+        beta = -gamma;
+        gamma = nextGamma;
+      } else if (angle === -90 || angle === 270) {
+        const nextGamma = -beta;
+        beta = gamma;
+        gamma = nextGamma;
+      } else if (angle === 180) {
+        gamma = -gamma;
+        beta = -beta;
+      }
+
+      if (tiltBase.gamma == null || tiltBase.beta == null) {
+        tiltBase.gamma = gamma;
+        tiltBase.beta = beta;
+      }
+
+      const dx = gsap.utils.clamp(
+        -TILT_RANGE,
+        TILT_RANGE,
+        gamma - tiltBase.gamma,
+      );
+      const dy = gsap.utils.clamp(-TILT_RANGE, TILT_RANGE, beta - tiltBase.beta);
+      pos.tx = -dx / TILT_RANGE;
+      pos.ty = -dy / TILT_RANGE;
+    };
+
+    const orientationEvent = DeviceOrientationEvent as typeof DeviceOrientationEvent & {
+      requestPermission?: () => Promise<string>;
+    };
+    let tiltListening = false;
+
+    const startTilt = () => {
+      if (tiltListening || reduce) return;
+      tiltListening = true;
+      window.addEventListener("deviceorientation", onOrient);
+    };
+
+    const requestTilt = () => {
+      if (tiltListening || reduce) return;
+      if (typeof orientationEvent.requestPermission === "function") {
+        void orientationEvent.requestPermission().then((state) => {
+          if (state === "granted") startTilt();
+        });
+        return;
+      }
+      startTilt();
     };
 
     let loopOffset = 0;
@@ -251,8 +304,8 @@ export function ParallaxGallery({
       }
 
       const setTop = set.getBoundingClientRect().top;
-      let minTop = 0;
-      let maxBottom = set.offsetHeight;
+      let minTop = Infinity;
+      let maxBottom = -Infinity;
 
       set.querySelectorAll<HTMLElement>("[data-poster]").forEach((el) => {
         const rect = el.getBoundingClientRect();
@@ -260,12 +313,13 @@ export function ParallaxGallery({
         maxBottom = Math.max(maxBottom, rect.bottom - setTop);
       });
 
-      const gap =
-        Number.parseFloat(getComputedStyle(set).rowGap) ||
-        Number.parseFloat(getComputedStyle(set).gap) ||
-        0;
+      if (!Number.isFinite(minTop) || !Number.isFinite(maxBottom)) {
+        loopH = set.offsetHeight;
+        return;
+      }
 
-      loopH = Math.max(set.offsetHeight, maxBottom - minTop) + gap;
+      const seam = Math.min(window.innerHeight * 0.05, 48);
+      loopH = Math.max(set.offsetHeight * 0.5, maxBottom - minTop + seam);
     };
 
     const placeSets = () => {
@@ -297,7 +351,7 @@ export function ParallaxGallery({
 
       for (let guard = 0; guard < 9; guard += 1) {
         placeSets();
-        applyParallax(root, reduce, desktop.matches, scrollFactors);
+        applyParallax(root, reduce, scrollFactors);
 
         let topAbove = -1;
         let topSlot = Infinity;
@@ -363,13 +417,13 @@ export function ParallaxGallery({
           slots[index] = index;
         });
         placeSets();
-        applyParallax(root, reduce, desktop.matches, scrollFactors);
+        applyParallax(root, reduce, scrollFactors);
         release();
         return true;
       }
 
       placeSets();
-      applyParallax(root, reduce, desktop.matches, scrollFactors);
+      applyParallax(root, reduce, scrollFactors);
       return true;
     };
 
@@ -388,10 +442,10 @@ export function ParallaxGallery({
           }
         }
         placeSets();
-        applyParallax(root, reduce, desktop.matches, scrollFactors);
+        applyParallax(root, reduce, scrollFactors);
       }
 
-      if (desktop.matches && !reduce && active) {
+      if (!reduce && active) {
         pos.x += (pos.tx - pos.x) * 0.09;
         pos.y += (pos.ty - pos.y) * 0.09;
         (["large", "medium", "small"] as const).forEach((size) => {
@@ -404,7 +458,7 @@ export function ParallaxGallery({
 
       if (loop) {
         recycleOffscreen();
-        applyParallax(root, reduce, desktop.matches, scrollFactors);
+        applyParallax(root, reduce, scrollFactors);
       }
     };
 
@@ -418,6 +472,7 @@ export function ParallaxGallery({
 
     const onTouchStart = (event: TouchEvent) => {
       lastTouchY = event.touches[0]?.clientY ?? null;
+      requestTilt();
     };
 
     const onTouchMove = (event: TouchEvent) => {
@@ -432,6 +487,10 @@ export function ParallaxGallery({
 
     if (!reduce) {
       window.addEventListener("pointermove", onMove, { passive: true });
+      window.addEventListener("click", requestTilt, { once: true });
+      if (typeof orientationEvent.requestPermission !== "function") {
+        startTilt();
+      }
     }
     gsap.ticker.add(tick);
 
@@ -445,6 +504,8 @@ export function ParallaxGallery({
       window.addEventListener("resize", measureLoopH);
       measureLoopH();
       placeSets();
+    } else {
+      window.addEventListener("touchstart", requestTilt, { passive: true });
     }
 
     const onBreakpoint = () => ScrollTrigger.refresh();
@@ -453,8 +514,11 @@ export function ParallaxGallery({
     return () => {
       desktop.removeEventListener("change", onBreakpoint);
       window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("click", requestTilt);
+      window.removeEventListener("deviceorientation", onOrient);
       window.removeEventListener("wheel", onWheel, true);
       window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchstart", requestTilt);
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("resize", measureLoopH);
       gsap.ticker.remove(tick);
