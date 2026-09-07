@@ -290,6 +290,12 @@ export function ParallaxGallery({
     let loopOffset = 0;
     let lockedY: number | null = null;
     let lastTouchY: number | null = null;
+    let lastTouchTime = 0;
+    let touchVel = 0;
+    let coastVel = 0;
+    let pageY = 0;
+    let pageTime = 0;
+    let pageVel = 0;
     let loopH = 0;
     const sets = Array.from(
       root.querySelectorAll<HTMLElement>("[data-loop-set]"),
@@ -395,6 +401,7 @@ export function ParallaxGallery({
 
     const release = () => {
       lockedY = null;
+      coastVel = 0;
       getLenisInstance()?.start();
     };
 
@@ -407,6 +414,9 @@ export function ParallaxGallery({
         if (!scrollingDown && loopOffset <= 0) return false;
         if (top < -2) loopOffset += -top;
         pinGallery();
+        if (lastTouchY == null && Math.abs(pageVel) > 80) {
+          coastVel = pageVel;
+        }
       }
 
       loopOffset += delta;
@@ -430,15 +440,38 @@ export function ParallaxGallery({
     const tick = () => {
       if (loop) {
         if (lockedY == null) {
+          const now = performance.now();
+          const y = getLenisInstance()?.scroll ?? window.scrollY;
+          if (pageTime > 0) {
+            const dt = Math.max(0.008, (now - pageTime) / 1000);
+            pageVel = (y - pageY) / dt;
+          }
+          pageY = y;
+          pageTime = now;
+
           const top = root.getBoundingClientRect().top;
           if (top < -2) {
             loopOffset += -top;
             pinGallery();
+            if (lastTouchY == null && Math.abs(pageVel) > 80) {
+              coastVel = pageVel;
+            }
           }
         } else {
           const lenis = getLenisInstance();
           if (lenis && Math.abs(lenis.scroll - lockedY) > 0.5) {
             lenis.scrollTo(lockedY, { immediate: true, force: true });
+          }
+
+          if (coastVel !== 0 && lastTouchY == null) {
+            const frames = gsap.ticker.deltaRatio(60);
+            const step = (coastVel / 60) * frames;
+            if (!addDelta(step)) {
+              coastVel = 0;
+            } else {
+              coastVel *= Math.pow(0.96, frames);
+              if (Math.abs(coastVel) < 32) coastVel = 0;
+            }
           }
         }
         placeSets();
@@ -472,17 +505,31 @@ export function ParallaxGallery({
 
     const onTouchStart = (event: TouchEvent) => {
       lastTouchY = event.touches[0]?.clientY ?? null;
+      lastTouchTime = performance.now();
+      touchVel = 0;
+      coastVel = 0;
       requestTilt();
     };
 
     const onTouchMove = (event: TouchEvent) => {
       if (!loop || lastTouchY == null) return;
       const y = event.touches[0]?.clientY ?? lastTouchY;
+      const now = performance.now();
+      const dt = Math.max(0.008, (now - lastTouchTime) / 1000);
       const delta = lastTouchY - y;
+      touchVel = touchVel * 0.55 + (delta / dt) * 0.45;
+      lastTouchTime = now;
       lastTouchY = y;
       if (addDelta(delta)) {
         event.preventDefault();
       }
+    };
+
+    const onTouchEnd = () => {
+      if (lockedY != null && Math.abs(touchVel) > 80) {
+        coastVel = touchVel;
+      }
+      lastTouchY = null;
     };
 
     if (!reduce) {
@@ -501,6 +548,8 @@ export function ParallaxGallery({
       });
       window.addEventListener("touchstart", onTouchStart, { passive: true });
       window.addEventListener("touchmove", onTouchMove, { passive: false });
+      window.addEventListener("touchend", onTouchEnd, { passive: true });
+      window.addEventListener("touchcancel", onTouchEnd, { passive: true });
       window.addEventListener("resize", measureLoopH);
       measureLoopH();
       placeSets();
@@ -520,6 +569,8 @@ export function ParallaxGallery({
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchstart", requestTilt);
       window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchEnd);
       window.removeEventListener("resize", measureLoopH);
       gsap.ticker.remove(tick);
       getLenisInstance()?.start();
