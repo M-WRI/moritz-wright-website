@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { IBM_Plex_Mono, Inter } from "next/font/google";
+import { SiteShell } from "@/components/site/SiteShell";
+import { site } from "@/lib/content";
 import "./globals.css";
 
 const inter = Inter({
@@ -8,10 +10,16 @@ const inter = Inter({
   display: "swap",
 });
 
+const ibmPlexMono = IBM_Plex_Mono({
+  variable: "--font-ibm-plex-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Moritz Wright — Software engineer & designer",
-  description:
-    "Portfolio of Moritz Wright — software engineer and designer building products and interfaces.",
+  title: site.metadata.title,
+  description: site.metadata.description,
 };
 
 export default function RootLayout({
@@ -20,8 +28,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full font-sans">{children}</body>
+    <html
+      lang="en"
+      className={`${inter.variable} ${ibmPlexMono.variable} h-full antialiased`}
+    >
+      <body className="min-h-full bg-background font-sans text-foreground">
+        <SiteShell>{children}</SiteShell>
+      </body>
     </html>
   );
 }
