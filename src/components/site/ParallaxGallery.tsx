@@ -44,9 +44,9 @@ const MOUSE_AMP: Record<Size, number> = {
 };
 
 const LOOP_MOUSE_AMP: Record<Size, number> = {
-  large: 72,
-  medium: 42,
-  small: 24,
+  large: 150,
+  medium: 90,
+  small: 55,
 };
 
 const LOOP_SLOTS: Slot[] = [
@@ -194,17 +194,6 @@ export function ParallaxGallery({
       });
     }, root);
 
-    let active = false;
-    const vis = ScrollTrigger.create({
-      trigger: root,
-      start: "top bottom",
-      end: "bottom top",
-      onToggle: (self) => {
-        active = self.isActive;
-      },
-    });
-    active = vis.isActive;
-
     const mice: Record<Size, HTMLElement[]> = {
       large: Array.from(
         root.querySelectorAll("[data-size='large'] [data-poster-mouse]"),
@@ -218,8 +207,8 @@ export function ParallaxGallery({
     };
 
     const pos = { tx: 0, ty: 0, x: 0, y: 0 };
-    const tiltBase = { beta: null as number | null, gamma: null as number | null };
-    const TILT_RANGE = 18;
+    const tiltBase = { x: null as number | null, y: null as number | null };
+    const TILT_RANGE = 7;
 
     const onMove = (event: PointerEvent) => {
       if (event.pointerType === "touch") return;
@@ -227,64 +216,89 @@ export function ParallaxGallery({
       pos.ty = gsap.utils.mapRange(0, window.innerHeight, 1, -1, event.clientY);
     };
 
+    const applyTilt = (rawX: number, rawY: number) => {
+      if (tiltBase.x == null || tiltBase.y == null) {
+        tiltBase.x = rawX;
+        tiltBase.y = rawY;
+      }
+      const dx = gsap.utils.clamp(-TILT_RANGE, TILT_RANGE, rawX - tiltBase.x);
+      const dy = gsap.utils.clamp(-TILT_RANGE, TILT_RANGE, rawY - tiltBase.y);
+      pos.tx = -dx / TILT_RANGE;
+      pos.ty = dy / TILT_RANGE;
+    };
+
     const onOrient = (event: DeviceOrientationEvent) => {
       if (event.gamma == null || event.beta == null) return;
+      applyTilt(event.gamma / 4, event.beta / 4);
+    };
+
+    const onMotion = (event: DeviceMotionEvent) => {
+      const acc = event.accelerationIncludingGravity;
+      if (!acc || acc.x == null || acc.y == null) return;
 
       const angle =
         (screen.orientation?.angle ??
           (window as Window & { orientation?: number }).orientation ??
           0) || 0;
-      let gamma = event.gamma;
-      let beta = event.beta;
+      let x = acc.x;
+      let y = acc.y;
 
       if (angle === 90) {
-        const nextGamma = beta;
-        beta = -gamma;
-        gamma = nextGamma;
+        const nextX = y;
+        y = -x;
+        x = nextX;
       } else if (angle === -90 || angle === 270) {
-        const nextGamma = -beta;
-        beta = gamma;
-        gamma = nextGamma;
+        const nextX = -y;
+        y = x;
+        x = nextX;
       } else if (angle === 180) {
-        gamma = -gamma;
-        beta = -beta;
+        x = -x;
+        y = -y;
       }
 
-      if (tiltBase.gamma == null || tiltBase.beta == null) {
-        tiltBase.gamma = gamma;
-        tiltBase.beta = beta;
-      }
-
-      const dx = gsap.utils.clamp(
-        -TILT_RANGE,
-        TILT_RANGE,
-        gamma - tiltBase.gamma,
-      );
-      const dy = gsap.utils.clamp(-TILT_RANGE, TILT_RANGE, beta - tiltBase.beta);
-      pos.tx = -dx / TILT_RANGE;
-      pos.ty = -dy / TILT_RANGE;
+      applyTilt(x, y);
     };
 
     const orientationEvent = DeviceOrientationEvent as typeof DeviceOrientationEvent & {
       requestPermission?: () => Promise<string>;
     };
+    const motionEvent = DeviceMotionEvent as typeof DeviceMotionEvent & {
+      requestPermission?: () => Promise<string>;
+    };
     let tiltListening = false;
+    let tiltRequesting = false;
 
     const startTilt = () => {
       if (tiltListening || reduce) return;
       tiltListening = true;
-      window.addEventListener("deviceorientation", onOrient);
+      window.addEventListener("deviceorientation", onOrient, true);
+      window.addEventListener("devicemotion", onMotion, true);
     };
 
     const requestTilt = () => {
-      if (tiltListening || reduce) return;
-      if (typeof orientationEvent.requestPermission === "function") {
-        void orientationEvent.requestPermission().then((state) => {
-          if (state === "granted") startTilt();
-        });
+      if (tiltListening || reduce || tiltRequesting) return;
+      const needOrient =
+        typeof orientationEvent.requestPermission === "function";
+      const needMotion = typeof motionEvent.requestPermission === "function";
+      if (!needOrient && !needMotion) {
+        startTilt();
         return;
       }
-      startTilt();
+      tiltRequesting = true;
+      void Promise.all([
+        needOrient
+          ? orientationEvent.requestPermission!()
+          : Promise.resolve("granted"),
+        needMotion
+          ? motionEvent.requestPermission!()
+          : Promise.resolve("granted"),
+      ])
+        .then((states) => {
+          if (states.some((state) => state === "granted")) startTilt();
+        })
+        .finally(() => {
+          tiltRequesting = false;
+        });
     };
 
     let loopOffset = 0;
@@ -478,15 +492,19 @@ export function ParallaxGallery({
         applyParallax(root, reduce, scrollFactors);
       }
 
-      if (!reduce && active) {
-        pos.x += (pos.tx - pos.x) * 0.09;
-        pos.y += (pos.ty - pos.y) * 0.09;
-        (["large", "medium", "small"] as const).forEach((size) => {
-          const transform = `translate(${(mouseAmp[size] * pos.x).toFixed(2)}px, ${(mouseAmp[size] * pos.y).toFixed(2)}px)`;
-          mice[size].forEach((el) => {
-            el.style.transform = transform;
+      if (!reduce) {
+        const bounds = root.getBoundingClientRect();
+        const inView = bounds.top < window.innerHeight && bounds.bottom > 0;
+        if (inView || lockedY != null) {
+          pos.x += (pos.tx - pos.x) * 0.12;
+          pos.y += (pos.ty - pos.y) * 0.12;
+          (["large", "medium", "small"] as const).forEach((size) => {
+            const transform = `translate(${(mouseAmp[size] * pos.x).toFixed(2)}px, ${(mouseAmp[size] * pos.y).toFixed(2)}px)`;
+            mice[size].forEach((el) => {
+              el.style.transform = transform;
+            });
           });
-        });
+        }
       }
 
       if (loop) {
@@ -564,7 +582,8 @@ export function ParallaxGallery({
       desktop.removeEventListener("change", onBreakpoint);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("click", requestTilt);
-      window.removeEventListener("deviceorientation", onOrient);
+      window.removeEventListener("deviceorientation", onOrient, true);
+      window.removeEventListener("devicemotion", onMotion, true);
       window.removeEventListener("wheel", onWheel, true);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchstart", requestTilt);
@@ -574,7 +593,6 @@ export function ParallaxGallery({
       window.removeEventListener("resize", measureLoopH);
       gsap.ticker.remove(tick);
       getLenisInstance()?.start();
-      vis.kill();
       ctx.revert();
     };
   }, [loop, projects]);
