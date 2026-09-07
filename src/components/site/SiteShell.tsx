@@ -19,7 +19,7 @@ export function SiteShell({ children }: { children: ReactNode }) {
       </a>
       <SiteHeader />
       <main id="main">{children}</main>
-      <SiteFooter />
+      {pathname === "/" ? null : <SiteFooter />}
     </SmoothScroll>
   );
 }

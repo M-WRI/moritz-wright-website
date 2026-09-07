@@ -1,6 +1,7 @@
 "use client";
 
 import type { Project } from "@/lib/content";
+import { getLenisInstance } from "@/lib/lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
@@ -29,14 +30,141 @@ const SCROLL_FACTOR: Record<Size, number> = {
   small: 0.12,
 };
 
+const LOOP_SCROLL_FACTOR: Record<Size, number> = {
+  large: 0.16,
+  medium: 0.09,
+  small: 0.04,
+};
+
 const MOUSE_AMP: Record<Size, number> = {
   large: 180,
   medium: 100,
   small: 65,
 };
 
-export function ParallaxGallery({ projects }: { projects: Project[] }) {
+const LOOP_MOUSE_AMP: Record<Size, number> = {
+  large: 72,
+  medium: 42,
+  small: 24,
+};
+
+const LOOP_SLOTS: Array<{ size: Size; column: string; shift: string }> = [
+  { size: "large", column: "1 / span 4", shift: "4%" },
+  { size: "small", column: "10 / span 2", shift: "16%" },
+  { size: "medium", column: "9 / span 3", shift: "-10%" },
+  { size: "small", column: "2 / span 2", shift: "14%" },
+  { size: "large", column: "6 / span 4", shift: "6%" },
+  { size: "medium", column: "1 / span 3", shift: "-8%" },
+];
+
+const WHEEL_SCALE = 0.72;
+const LOOP_COPIES = 3;
+
+function PosterSet({
+  projects,
+  copy,
+  loop = false,
+}: {
+  projects: Project[];
+  copy: number;
+  loop?: boolean;
+}) {
+  const slots = loop ? LOOP_SLOTS : SLOTS;
+  const perRow = loop ? 2 : 3;
+
+  return (
+    <div data-loop-set className="gallery-world">
+      {projects.map((project, index) => {
+        const slot = slots[index % slots.length];
+
+        return (
+          <article
+            key={`${copy}-${project.slug}`}
+            data-poster
+            data-size={slot.size}
+            className="gallery-poster"
+            style={
+              {
+                "--poster-col": slot.column,
+                "--poster-row": String(Math.floor(index / perRow) + 1),
+                "--poster-shift": slot.shift,
+              } as CSSProperties
+            }
+          >
+            <Link href={`/projects/${project.slug}`} className="group block">
+              <div data-poster-par className="will-change-transform">
+                <div data-poster-mouse className="will-change-transform">
+                  <div className="gallery-poster__frame">
+                    <Image
+                      src={project.image}
+                      alt={project.title}
+                      fill
+                      className="object-cover grayscale transition duration-700 group-hover:grayscale-0"
+                      sizes="(max-width: 768px) 90vw, 32vw"
+                    />
+                  </div>
+                  <div className="mt-2 flex items-baseline justify-between gap-3">
+                    <h3 className="text-[13px] tracking-[-0.03em]">
+                      {project.title}
+                    </h3>
+                    <p className="text-[11px] lowercase text-muted">
+                      {project.category}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
+function applyParallax(
+  root: HTMLElement,
+  reduce: boolean,
+  desktop: boolean,
+  factors: Record<Size, number>,
+) {
+  if (reduce || !desktop) {
+    root.querySelectorAll<HTMLElement>("[data-poster-par]").forEach((par) => {
+      gsap.set(par, { y: 0 });
+    });
+    return;
+  }
+
+  const vh = window.innerHeight;
+  root.querySelectorAll<HTMLElement>("[data-poster]").forEach((fig) => {
+    const size = fig.dataset.size as Size;
+    const par = fig.querySelector<HTMLElement>("[data-poster-par]");
+    const factor = factors[size];
+    if (!par || !factor) return;
+    const rect = fig.getBoundingClientRect();
+    const y = gsap.utils.clamp(
+      -vh * factor,
+      vh * factor,
+      gsap.utils.mapRange(
+        vh,
+        -rect.height,
+        -vh * factor,
+        vh * factor,
+        rect.top,
+      ),
+    );
+    gsap.set(par, { y });
+  });
+}
+
+export function ParallaxGallery({
+  projects,
+  loop = false,
+}: {
+  projects: Project[];
+  loop?: boolean;
+}) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const copies = loop ? LOOP_COPIES : 1;
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -46,9 +174,11 @@ export function ParallaxGallery({ projects }: { projects: Project[] }) {
       "(prefers-reduced-motion: reduce)",
     ).matches;
     const desktop = window.matchMedia("(min-width: 768px)");
+    const scrollFactors = loop ? LOOP_SCROLL_FACTOR : SCROLL_FACTOR;
+    const mouseAmp = loop ? LOOP_MOUSE_AMP : MOUSE_AMP;
 
     const ctx = gsap.context(() => {
-      if (reduce || !desktop.matches) return;
+      if (loop || reduce || !desktop.matches) return;
 
       root.querySelectorAll<HTMLElement>("[data-poster]").forEach((fig) => {
         const size = fig.dataset.size as Size;
@@ -83,6 +213,7 @@ export function ParallaxGallery({ projects }: { projects: Project[] }) {
         active = self.isActive;
       },
     });
+    active = vis.isActive;
 
     const mice: Record<Size, HTMLElement[]> = {
       large: Array.from(
@@ -103,21 +234,217 @@ export function ParallaxGallery({ projects }: { projects: Project[] }) {
       pos.ty = gsap.utils.mapRange(0, window.innerHeight, 1, -1, event.clientY);
     };
 
-    const tick = () => {
-      if (!desktop.matches || reduce || !active) return;
-      pos.x += (pos.tx - pos.x) * 0.09;
-      pos.y += (pos.ty - pos.y) * 0.09;
-      (["large", "medium", "small"] as const).forEach((size) => {
-        const transform = `translate(${(MOUSE_AMP[size] * pos.x).toFixed(2)}px, ${(MOUSE_AMP[size] * pos.y).toFixed(2)}px)`;
-        mice[size].forEach((el) => {
-          el.style.transform = transform;
-        });
+    let loopOffset = 0;
+    let lockedY: number | null = null;
+    let lastTouchY: number | null = null;
+    let loopH = 0;
+    const sets = Array.from(
+      root.querySelectorAll<HTMLElement>("[data-loop-set]"),
+    );
+    const slots = sets.map((_, index) => index);
+
+    const measureLoopH = () => {
+      const set = sets[0];
+      if (!set) {
+        loopH = 0;
+        return;
+      }
+
+      const setTop = set.getBoundingClientRect().top;
+      let minTop = 0;
+      let maxBottom = set.offsetHeight;
+
+      set.querySelectorAll<HTMLElement>("[data-poster]").forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        minTop = Math.min(minTop, rect.top - setTop);
+        maxBottom = Math.max(maxBottom, rect.bottom - setTop);
       });
+
+      const gap =
+        Number.parseFloat(getComputedStyle(set).rowGap) ||
+        Number.parseFloat(getComputedStyle(set).gap) ||
+        0;
+
+      loopH = Math.max(set.offsetHeight, maxBottom - minTop) + gap;
+    };
+
+    const placeSets = () => {
+      if (sets.length < 2 || loopH < 8) return;
+      sets.forEach((set, index) => {
+        gsap.set(set, { y: slots[index] * loopH - loopOffset, force3D: true });
+      });
+    };
+
+    const framesOffscreen = (set: HTMLElement) => {
+      const cards = set.querySelectorAll<HTMLElement>("[data-poster-mouse]");
+      if (!cards.length) return { above: true, below: true };
+
+      const vh = window.innerHeight;
+      let maxBottom = -Infinity;
+      let minTop = Infinity;
+
+      cards.forEach((card) => {
+        const rect = card.getBoundingClientRect();
+        maxBottom = Math.max(maxBottom, rect.bottom);
+        minTop = Math.min(minTop, rect.top);
+      });
+
+      return { above: maxBottom < 0, below: minTop > vh };
+    };
+
+    const recycleOffscreen = () => {
+      if (sets.length < 2 || loopH < 8) return;
+
+      for (let guard = 0; guard < 9; guard += 1) {
+        placeSets();
+        applyParallax(root, reduce, desktop.matches, scrollFactors);
+
+        let topAbove = -1;
+        let topSlot = Infinity;
+        let bottomBelow = -1;
+        let bottomSlot = -Infinity;
+
+        sets.forEach((set, index) => {
+          const { above, below } = framesOffscreen(set);
+          if (above && slots[index] < topSlot) {
+            topSlot = slots[index];
+            topAbove = index;
+          }
+          if (below && slots[index] > bottomSlot) {
+            bottomSlot = slots[index];
+            bottomBelow = index;
+          }
+        });
+
+        if (topAbove !== -1) {
+          slots[topAbove] += LOOP_COPIES;
+          continue;
+        }
+
+        if (bottomBelow !== -1 && slots[bottomBelow] >= LOOP_COPIES) {
+          slots[bottomBelow] -= LOOP_COPIES;
+          continue;
+        }
+
+        break;
+      }
+    };
+
+    const pinGallery = () => {
+      const lenis = getLenisInstance();
+      const current = lenis?.scroll ?? window.scrollY;
+      const top = root.getBoundingClientRect().top;
+      lockedY = current + top;
+      lenis?.scrollTo(lockedY, { immediate: true, force: true });
+      lenis?.stop();
+    };
+
+    const release = () => {
+      lockedY = null;
+      getLenisInstance()?.start();
+    };
+
+    const addDelta = (delta: number) => {
+      const top = root.getBoundingClientRect().top;
+      const scrollingDown = delta > 0;
+
+      if (lockedY == null) {
+        if (top > 2) return false;
+        if (!scrollingDown && loopOffset <= 0) return false;
+        if (top < -2) loopOffset += -top;
+        pinGallery();
+      }
+
+      loopOffset += delta;
+
+      if (loopOffset <= 0) {
+        loopOffset = 0;
+        slots.forEach((_, index) => {
+          slots[index] = index;
+        });
+        placeSets();
+        applyParallax(root, reduce, desktop.matches, scrollFactors);
+        release();
+        return true;
+      }
+
+      placeSets();
+      applyParallax(root, reduce, desktop.matches, scrollFactors);
+      return true;
+    };
+
+    const tick = () => {
+      if (loop) {
+        if (lockedY == null) {
+          const top = root.getBoundingClientRect().top;
+          if (top < -2) {
+            loopOffset += -top;
+            pinGallery();
+          }
+        } else {
+          const lenis = getLenisInstance();
+          if (lenis && Math.abs(lenis.scroll - lockedY) > 0.5) {
+            lenis.scrollTo(lockedY, { immediate: true, force: true });
+          }
+        }
+        placeSets();
+        applyParallax(root, reduce, desktop.matches, scrollFactors);
+      }
+
+      if (desktop.matches && !reduce && active) {
+        pos.x += (pos.tx - pos.x) * 0.09;
+        pos.y += (pos.ty - pos.y) * 0.09;
+        (["large", "medium", "small"] as const).forEach((size) => {
+          const transform = `translate(${(mouseAmp[size] * pos.x).toFixed(2)}px, ${(mouseAmp[size] * pos.y).toFixed(2)}px)`;
+          mice[size].forEach((el) => {
+            el.style.transform = transform;
+          });
+        });
+      }
+
+      if (loop) {
+        recycleOffscreen();
+        applyParallax(root, reduce, desktop.matches, scrollFactors);
+      }
+    };
+
+    const onWheel = (event: WheelEvent) => {
+      if (!loop) return;
+      if (addDelta(event.deltaY * WHEEL_SCALE)) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    };
+
+    const onTouchStart = (event: TouchEvent) => {
+      lastTouchY = event.touches[0]?.clientY ?? null;
+    };
+
+    const onTouchMove = (event: TouchEvent) => {
+      if (!loop || lastTouchY == null) return;
+      const y = event.touches[0]?.clientY ?? lastTouchY;
+      const delta = lastTouchY - y;
+      lastTouchY = y;
+      if (addDelta(delta)) {
+        event.preventDefault();
+      }
     };
 
     if (!reduce) {
       window.addEventListener("pointermove", onMove, { passive: true });
-      gsap.ticker.add(tick);
+    }
+    gsap.ticker.add(tick);
+
+    if (loop) {
+      window.addEventListener("wheel", onWheel, {
+        passive: false,
+        capture: true,
+      });
+      window.addEventListener("touchstart", onTouchStart, { passive: true });
+      window.addEventListener("touchmove", onTouchMove, { passive: false });
+      window.addEventListener("resize", measureLoopH);
+      measureLoopH();
+      placeSets();
     }
 
     const onBreakpoint = () => ScrollTrigger.refresh();
@@ -126,57 +453,26 @@ export function ParallaxGallery({ projects }: { projects: Project[] }) {
     return () => {
       desktop.removeEventListener("change", onBreakpoint);
       window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("wheel", onWheel, true);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("resize", measureLoopH);
       gsap.ticker.remove(tick);
+      getLenisInstance()?.start();
       vis.kill();
       ctx.revert();
     };
-  }, [projects]);
+  }, [loop, projects]);
 
   return (
-    <div ref={rootRef} data-parallax-root className="gallery-world">
-      {projects.map((project, index) => {
-        const slot = SLOTS[index % SLOTS.length];
-
-        return (
-          <article
-            key={project.slug}
-            data-poster
-            data-size={slot.size}
-            className="gallery-poster"
-            style={
-              {
-                "--poster-col": slot.column,
-                "--poster-row": String(Math.floor(index / 3) + 1),
-                "--poster-shift": slot.shift,
-              } as CSSProperties
-            }
-          >
-            <Link href={`/projects/${project.slug}`} className="group block">
-              <div data-poster-par className="will-change-transform">
-                <div data-poster-mouse className="will-change-transform">
-                  <div className="gallery-poster__frame">
-                    <Image
-                      src={project.image}
-                      alt={project.title}
-                      fill
-                      className="object-cover grayscale transition duration-700 group-hover:grayscale-0"
-                      sizes="(max-width: 768px) 90vw, 32vw"
-                    />
-                  </div>
-                  <div className="mt-2 flex items-baseline justify-between gap-3">
-                    <h3 className="text-[13px] tracking-[-0.03em]">
-                      {project.title}
-                    </h3>
-                    <p className="text-[11px] lowercase text-muted">
-                      {project.category}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          </article>
-        );
-      })}
+    <div
+      ref={rootRef}
+      data-parallax-root
+      className={loop ? "gallery-loop" : undefined}
+    >
+      {Array.from({ length: copies }, (_, copy) => (
+        <PosterSet key={copy} projects={projects} copy={copy} loop={loop} />
+      ))}
     </div>
   );
 }

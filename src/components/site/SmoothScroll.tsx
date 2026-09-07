@@ -1,6 +1,7 @@
 "use client";
 
 import Lenis from "lenis";
+import { setLenisInstance } from "@/lib/lenis";
 import { useLayoutEffect, type ReactNode } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -24,6 +25,7 @@ export function SmoothScroll({
       wheelMultiplier: 0.72,
       smoothWheel: !reduce,
     });
+    setLenisInstance(lenis);
     lenis.on("scroll", ScrollTrigger.update);
 
     const onTick = (time: number) => {
@@ -34,6 +36,7 @@ export function SmoothScroll({
 
     return () => {
       gsap.ticker.remove(onTick);
+      setLenisInstance(null);
       lenis.destroy();
     };
   }, []);
