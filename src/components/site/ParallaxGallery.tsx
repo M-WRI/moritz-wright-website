@@ -49,6 +49,14 @@ const LOOP_MOUSE_AMP: Record<Size, number> = {
   small: 55,
 };
 
+const MOBILE_TILT_MAX: Record<Size, number> = {
+  large: 28,
+  medium: 18,
+  small: 12,
+};
+
+const LOOP_POSTER_SCALE = { desktop: 1.28, mobile: 2.25 };
+
 const LOOP_SLOTS: Slot[] = [
   { size: "large", column: "1 / span 4", shift: "4%" },
   { size: "small", column: "10 / span 2", shift: "16%" },
@@ -533,10 +541,22 @@ export function ParallaxGallery({
       if (!reduce) {
         pos.x += (pos.tx - pos.x) * 0.14;
         pos.y += (pos.ty - pos.y) * 0.14;
+        const mobile = !desktop.matches;
+        const posterScale = loop
+          ? mobile
+            ? LOOP_POSTER_SCALE.mobile
+            : LOOP_POSTER_SCALE.desktop
+          : mobile
+            ? 1.5
+            : 1;
         (["large", "medium", "small"] as const).forEach((size) => {
+          const visual = mobile
+            ? Math.min(mouseAmp[size] * posterScale, MOBILE_TILT_MAX[size])
+            : mouseAmp[size];
+          const amp = visual / posterScale;
           gsap.set(mice[size], {
-            x: mouseAmp[size] * pos.x,
-            y: mouseAmp[size] * pos.y,
+            x: amp * pos.x,
+            y: amp * pos.y,
             force3D: true,
           });
         });
