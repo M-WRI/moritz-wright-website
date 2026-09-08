@@ -1,32 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { applyTheme, readTheme } from "@/lib/theme";
+import { Moon, Sun } from "lucide-react";
+import { useLayoutEffect, useState } from "react";
 
-function isDark(): boolean {
-  if (typeof document === "undefined") return false;
-  return document.documentElement.classList.contains("dark");
-}
+export function ThemeToggle({ className = "" }: { className?: string }) {
+  const [light, setLight] = useState(false);
 
-export function ThemeToggle() {
-  const [dark, setDark] = useState(false);
-
-  useEffect(() => {
-    setDark(isDark());
+  useLayoutEffect(() => {
+    const sync = () => setLight(readTheme() === "light");
+    sync();
+    window.addEventListener("themechange", sync);
+    return () => window.removeEventListener("themechange", sync);
   }, []);
 
   return (
     <button
       type="button"
-      className="rounded-full border border-border px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-muted transition-colors hover:border-foreground hover:text-foreground"
-      onClick={() => {
-        const next = !isDark();
-        document.documentElement.classList.toggle("dark", next);
-        localStorage.setItem("theme", next ? "dark" : "light");
-        setDark(next);
-      }}
-      aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+      className={`chrome-btn ${className}`}
+      aria-label={light ? "Switch to dark mode" : "Switch to light mode"}
+      onClick={() => applyTheme(light ? "dark" : "light")}
     >
-      {dark ? "Light" : "Dark"}
+      {light ? (
+        <Moon className="h-7 w-7" strokeWidth={1.75} />
+      ) : (
+        <Sun className="h-7 w-7" strokeWidth={1.75} />
+      )}
     </button>
   );
 }

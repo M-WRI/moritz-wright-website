@@ -22,6 +22,8 @@ export const metadata: Metadata = {
   description: site.metadata.description,
 };
 
+const themeInit = `(function(){try{if(localStorage.getItem("mw-theme")==="light")document.documentElement.classList.add("light")}catch(e){}})();`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -31,7 +33,11 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${inter.variable} ${ibmPlexMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInit }} />
+      </head>
       <body className="min-h-full bg-background font-sans text-foreground">
         <SiteShell>{children}</SiteShell>
       </body>

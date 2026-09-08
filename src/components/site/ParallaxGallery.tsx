@@ -55,7 +55,14 @@ const MOBILE_TILT_MAX: Record<Size, number> = {
   small: 12,
 };
 
+const DESKTOP_MOUSE_MAX: Record<Size, number> = {
+  large: 42,
+  medium: 28,
+  small: 18,
+};
+
 const LOOP_POSTER_SCALE = { desktop: 1.28, mobile: 2.25 };
+const TILT_STORAGE_KEY = "mw-gallery-tilt";
 
 const LOOP_SLOTS: Slot[] = [
   { size: "large", column: "1 / span 4", shift: "4%" },
@@ -68,6 +75,22 @@ const LOOP_SLOTS: Slot[] = [
 
 const WHEEL_SCALE = 0.72;
 const LOOP_COPIES = 3;
+
+function readTiltGranted() {
+  try {
+    return window.localStorage.getItem(TILT_STORAGE_KEY) === "granted";
+  } catch {
+    return false;
+  }
+}
+
+function writeTiltGranted() {
+  try {
+    window.localStorage.setItem(TILT_STORAGE_KEY, "granted");
+  } catch {
+    // Private mode can block storage.
+  }
+}
 
 function PosterSet({
   projects,
@@ -310,41 +333,38 @@ export function ParallaxGallery({
       typeof (ctor as PermissionCtor | undefined)?.requestPermission ===
       "function";
 
-    const requestTilt = () => {
+    const requestTilt = (allowPrompt: boolean) => {
       if (reduce || tiltAttached || tiltRequesting) return;
 
       const motion = window.DeviceMotionEvent as PermissionCtor | undefined;
-      const orientation = window.DeviceOrientationEvent as
-        | PermissionCtor
-        | undefined;
-      const askMotion = canAsk(motion);
-      const askOrient = canAsk(orientation);
-
-      if (!askMotion && !askOrient) {
+      if (!canAsk(motion)) {
         attachTilt();
         return;
       }
 
-      tiltRequesting = true;
-      const asks: Promise<string>[] = [];
-      if (askMotion) {
-        asks.push(motion!.requestPermission!().catch(() => "denied"));
-      }
-      if (askOrient) {
-        asks.push(orientation!.requestPermission!().catch(() => "denied"));
-      }
+      if (!allowPrompt && !readTiltGranted()) return;
 
-      void Promise.all(asks)
-        .then((states) => {
-          if (states.includes("granted")) attachTilt();
+      tiltRequesting = true;
+      void motion!
+        .requestPermission!()
+        .then((state) => {
+          if (state === "granted") {
+            writeTiltGranted();
+            attachTilt();
+          }
+        })
+        .catch(() => {
+          if (readTiltGranted()) attachTilt();
         })
         .finally(() => {
           tiltRequesting = false;
         });
     };
 
-    if (!canAsk(window.DeviceMotionEvent) && !canAsk(window.DeviceOrientationEvent)) {
+    if (!canAsk(window.DeviceMotionEvent)) {
       attachTilt();
+    } else if (readTiltGranted()) {
+      requestTilt(false);
     }
 
     let loopOffset = 0;
@@ -550,9 +570,8 @@ export function ParallaxGallery({
             ? 1.5
             : 1;
         (["large", "medium", "small"] as const).forEach((size) => {
-          const visual = mobile
-            ? Math.min(mouseAmp[size] * posterScale, MOBILE_TILT_MAX[size])
-            : mouseAmp[size];
+          const cap = mobile ? MOBILE_TILT_MAX[size] : DESKTOP_MOUSE_MAX[size];
+          const visual = Math.min(mouseAmp[size] * posterScale, cap);
           const amp = visual / posterScale;
           gsap.set(mice[size], {
             x: amp * pos.x,
@@ -597,17 +616,19 @@ export function ParallaxGallery({
       }
     };
 
+    const onAskTilt = () => requestTilt(!readTiltGranted());
+
     const onTouchEnd = () => {
       if (lockedY != null && Math.abs(touchVel) > 80) {
         coastVel = touchVel;
       }
       lastTouchY = null;
-      requestTilt();
+      onAskTilt();
     };
 
     if (!reduce) {
       window.addEventListener("pointermove", onMove, { passive: true });
-      window.addEventListener("click", requestTilt, true);
+      window.addEventListener("click", onAskTilt, true);
     }
     gsap.ticker.add(tick);
 
@@ -624,7 +645,7 @@ export function ParallaxGallery({
       measureLoopH();
       placeSets();
     } else if (!reduce) {
-      window.addEventListener("touchend", requestTilt, { passive: true });
+      window.addEventListener("touchend", onAskTilt, { passive: true });
     }
 
     const onBreakpoint = () => ScrollTrigger.refresh();
@@ -633,13 +654,14 @@ export function ParallaxGallery({
     return () => {
       desktop.removeEventListener("change", onBreakpoint);
       window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("click", requestTilt, true);
+      window.removeEventListener("click", onAskTilt, true);
       window.removeEventListener("deviceorientation", onOrient, true);
       window.removeEventListener("devicemotion", onMotion, true);
       window.removeEventListener("wheel", onWheel, true);
       window.removeEventListener("touchstart", onTouchStart);
       window.removeEventListener("touchmove", onTouchMove);
       window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchend", onAskTilt);
       window.removeEventListener("touchcancel", onTouchEnd);
       window.removeEventListener("resize", measureLoopH);
       gsap.ticker.remove(tick);

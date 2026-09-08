@@ -19,7 +19,6 @@ export const site = {
 
 export const nav = [
   { href: "/", label: "Home" },
-  { href: "/projects", label: "Projects" },
   { href: "/services", label: "Services" },
   { href: "/about", label: "About" },
   { href: "/blog", label: "Blog" },
@@ -28,10 +27,7 @@ export const nav = [
 export const navColumns = [
   {
     title: "work",
-    links: [
-      { href: "/projects", label: "projects" },
-      { href: "/blog", label: "writing" },
-    ],
+    links: [{ href: "/blog", label: "writing" }],
   },
   {
     title: "practice",
@@ -57,7 +53,7 @@ export const hero = {
     "Developer Experience",
   ],
   body: "Full-stack software engineer with 6+ years of experience building applications, APIs, and digital products. Today I focus on AI-powered software, internal tools, and developer systems that help teams build and automate with consistent engineering standards.",
-  primaryCta: { href: "/projects", label: "View Projects" },
+  primaryCta: { href: "/", label: "View Work" },
   secondaryCta: { href: "/contact", label: "Work With Me" },
   tertiaryCta: { href: "/blog", label: "Read Blog" },
 } as const;

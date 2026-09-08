@@ -41,7 +41,7 @@ export default function AboutPage() {
         <p data-reveal className="mt-16 text-sm">
           <Link href="/contact">work with me</Link>
           <span className="text-muted"> · </span>
-          <Link href="/projects">view projects</Link>
+          <Link href="/">view work</Link>
         </p>
       </div>
     </div>

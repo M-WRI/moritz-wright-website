@@ -1,10 +1,13 @@
 "use client";
 
-import { SiteMark } from "@/components/site/SiteMark";
-import { nav, navColumns, site } from "@/lib/content";
+import { ThemeToggle } from "@/components/site/ThemeToggle";
+import { getLenisInstance } from "@/lib/lenis";
+import { site } from "@/lib/content";
+import gsap from "gsap";
+import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 function isActive(pathname: string, href: string) {
   if (href === "/") return pathname === "/";
@@ -12,104 +15,207 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function IntroLine({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <span className="block min-h-[1.2em] overflow-hidden">
-      <span data-intro className={`block ${className}`}>
-        {children}
-      </span>
-    </span>
-  );
-}
+const links = [
+  { href: "/blog", label: "writing" },
+  { href: "/services", label: "services" },
+  { href: "/about", label: "about" },
+  { href: "/contact", label: "contact" },
+] as const;
 
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const intro = pathname === "/";
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const readyRef = useRef(false);
+
+  useLayoutEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useLayoutEffect(() => {
+    const overlay = overlayRef.current;
+    if (!overlay) return;
+
+    const items = overlay.querySelectorAll<HTMLElement>("[data-menu-item]");
+    const reduce = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    if (!readyRef.current) {
+      readyRef.current = true;
+      gsap.set(overlay, { yPercent: 100, autoAlpha: 0 });
+      gsap.set(items, { yPercent: 110 });
+      return;
+    }
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        if (!open) getLenisInstance()?.start();
+      },
+    });
+
+    if (open) {
+      getLenisInstance()?.stop();
+      if (reduce) {
+        gsap.set(overlay, { yPercent: 0, autoAlpha: 1 });
+        gsap.set(items, { yPercent: 0 });
+        return;
+      }
+      gsap.set(items, { yPercent: 110 });
+      tl.set(overlay, { autoAlpha: 1 });
+      tl.fromTo(
+        overlay,
+        { yPercent: 100 },
+        { yPercent: 0, duration: 0.58, ease: "power3.out" },
+      );
+      tl.to(items, {
+        yPercent: 0,
+        duration: 0.72,
+        stagger: 0.08,
+        ease: "power3.out",
+      });
+    } else {
+      if (reduce) {
+        gsap.set(items, { yPercent: 110 });
+        gsap.set(overlay, { yPercent: 100, autoAlpha: 0 });
+        getLenisInstance()?.start();
+        return;
+      }
+      tl.to(items, {
+        yPercent: 110,
+        duration: 0.32,
+        stagger: 0.04,
+        ease: "power3.in",
+      });
+      tl.to(overlay, {
+        yPercent: 100,
+        duration: 0.48,
+        ease: "power3.in",
+      });
+      tl.set(overlay, { autoAlpha: 0 });
+    }
+
+    return () => {
+      tl.kill();
+    };
+  }, [open]);
+
+  useLayoutEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    const desktop = window.matchMedia("(min-width: 768px)");
+    const onBreakpoint = () => {
+      if (desktop.matches) setOpen(false);
+    };
+
+    window.addEventListener("keydown", onKey);
+    desktop.addEventListener("change", onBreakpoint);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      desktop.removeEventListener("change", onBreakpoint);
+    };
+  }, []);
 
   return (
-    <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
-      <div className="pointer-events-auto flex items-start justify-between gap-6 px-5 pt-5 md:px-8 md:pt-6">
-        <Link
-          href="/"
-          className="text-[15px] tracking-[-0.03em] text-foreground"
-          onClick={() => setOpen(false)}
-        >
-          {site.name}
-        </Link>
+    <>
+      <Link
+        href="/"
+        className="pointer-events-auto fixed left-5 top-5 z-50 md:left-8 md:top-6"
+        onClick={() => setOpen(false)}
+      >
+        <span className="sr-only">{site.name}</span>
+        <img
+          src="/logo.png"
+          alt=""
+          width={814}
+          height={579}
+          className="site-logo"
+        />
+      </Link>
 
-        {!intro ? (
-          <Link
-            href="/"
-            aria-label="Home"
-            className="absolute left-1/2 top-5 hidden -translate-x-1/2 md:block"
-          >
-            <SiteMark className="h-7 w-11 text-foreground" />
-          </Link>
-        ) : null}
-
+      <header className="pointer-events-none fixed inset-x-0 top-0 z-50 mix-blend-difference">
         <nav
-          className="hidden grid-cols-3 gap-12 text-[14px] leading-[1.35] tracking-[-0.02em] md:grid"
           aria-label="Primary"
+          className="pointer-events-auto absolute right-5 top-5 hidden flex-col items-end text-right md:right-8 md:top-16 md:flex"
         >
-          {navColumns.map((column) => (
-            <div key={column.title} className="min-w-[7.5rem]">
-              <IntroLine className="mb-2 text-[11px] text-muted">
-                {column.title}
-              </IntroLine>
-              {column.links.map((link) => (
-                <IntroLine key={link.href}>
-                  <Link
-                    href={link.href}
-                    className={`block py-[1px] lowercase transition-opacity hover:opacity-50 ${
-                      isActive(pathname, link.href) ? "opacity-100" : "opacity-90"
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                </IntroLine>
-              ))}
-            </div>
-          ))}
-        </nav>
+          {links.map((link) => {
+            const active = isActive(pathname, link.href);
 
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                aria-current={active ? "page" : undefined}
+                className={`nav-link ${active ? "is-active" : ""}`}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+        </nav>
+      </header>
+
+      <div className="pointer-events-auto fixed right-8 top-6 z-50 hidden md:block">
+        <ThemeToggle />
+      </div>
+
+      <div
+        className="pointer-events-auto fixed right-5 z-50 flex items-center gap-4 md:hidden"
+        style={{
+          bottom: "max(1.25rem, env(safe-area-inset-bottom))",
+        }}
+      >
+        <ThemeToggle className="chrome-btn" />
         <button
           type="button"
-          className="text-[13px] lowercase md:hidden"
+          className="chrome-btn"
           aria-expanded={open}
           aria-controls="mobile-nav"
+          aria-label={open ? "Close menu" : "Open menu"}
           onClick={() => setOpen((value) => !value)}
         >
-          {open ? "close" : "menu"}
+          {open ? (
+            <X className="h-7 w-7" strokeWidth={1.75} />
+          ) : (
+            <Menu className="h-7 w-7" strokeWidth={1.75} />
+          )}
         </button>
       </div>
 
-      {open ? (
-        <div
-          id="mobile-nav"
-          className="pointer-events-auto mt-4 grid grid-cols-2 gap-6 bg-background/95 px-5 pb-8 pt-2 md:hidden"
+      <div
+        ref={overlayRef}
+        id="mobile-nav"
+        className="invisible fixed inset-0 z-40 bg-background md:hidden"
+        aria-hidden={!open}
+      >
+        <nav
+          aria-label="Mobile"
+          className="absolute right-5 flex flex-col items-end text-right"
+          style={{
+            bottom: "max(4.5rem, calc(env(safe-area-inset-bottom) + 3.25rem))",
+          }}
         >
-          {nav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="lowercase"
-              onClick={() => setOpen(false)}
-            >
-              {item.label}
-            </Link>
-          ))}
-          <Link href="/contact" className="lowercase" onClick={() => setOpen(false)}>
-            contact
-          </Link>
-        </div>
-      ) : null}
-    </header>
+          {links.map((link) => {
+            const active = isActive(pathname, link.href);
+
+            return (
+              <div key={link.href} className="overflow-hidden">
+                <span data-menu-item className="block">
+                  <Link
+                    href={link.href}
+                    aria-current={active ? "page" : undefined}
+                    className={`nav-link ${active ? "is-active" : ""}`}
+                    onClick={() => setOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                </span>
+              </div>
+            );
+          })}
+        </nav>
+      </div>
+    </>
   );
 }

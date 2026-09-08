@@ -12,6 +12,18 @@
   --display: #cfcfcf;
 }
 
+html.light {
+  --background: #ffffff;
+  --foreground: #000000;
+  --muted: #000000;
+  --border: #000000;
+  --card: #ffffff;
+  --accent: #000000;
+  --accent-fg: #ffffff;
+  --display: #000000;
+  --color-background: #ffffff;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -28,12 +40,18 @@
 html {
   scrollbar-gutter: stable;
   color-scheme: dark;
+  background-color: #000000;
   overflow-x: clip;
   overflow-y: scroll;
 }
 
+html.light {
+  color-scheme: only light;
+  background-color: #ffffff;
+}
+
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
 }
 
@@ -143,8 +161,70 @@ body {
   padding-right: 0.28em;
 }
 
-.marquee:hover .marquee-track {
-  animation-play-state: paused;
+.nav-link {
+  position: relative;
+  display: inline-block;
+  color: var(--foreground);
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.5;
+  text-transform: lowercase;
+}
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0.12em;
+  left: 0;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 0.35s ease;
+}
+
+.nav-link:hover::after,
+.nav-link.is-active::after {
+  transform: scaleX(1);
+}
+
+html.light header {
+  mix-blend-mode: normal;
+}
+
+html.light .nav-link {
+  color: #000000;
+}
+
+.site-logo {
+  display: block;
+  width: auto;
+  height: 2.5rem;
+  filter: invert(1);
+}
+
+html.light .site-logo {
+  filter: none;
+}
+
+@media (min-width: 768px) {
+  .site-logo {
+    height: 2.85rem;
+  }
+}
+
+.chrome-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 0;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #000000;
+  mix-blend-mode: difference;
 }
 
 @keyframes marquee-slide {

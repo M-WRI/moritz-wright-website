@@ -61,8 +61,8 @@ export default async function ProjectPage({ params }: Props) {
             Live demo
           </a>
         ) : null}
-        <Link href="/projects" className="text-muted hover:text-foreground">
-          ← All projects
+        <Link href="/" className="text-muted hover:text-foreground">
+          ← Back
         </Link>
       </div>
 
