@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Archivo_Black, IBM_Plex_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { JsonLd } from "@/components/site/JsonLd";
 import { SiteShell } from "@/components/site/SiteShell";
 import { site } from "@/lib/content";
@@ -114,6 +115,7 @@ export default function RootLayout({
       <body className="min-h-full bg-background font-mono text-foreground">
         <JsonLd />
         <SiteShell>{children}</SiteShell>
+        <Analytics />
       </body>
     </html>
   );

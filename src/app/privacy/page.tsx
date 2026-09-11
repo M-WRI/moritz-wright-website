@@ -53,14 +53,14 @@ export default function PrivacyPolicyPage() {
             and your email address, plus any other details you choose to include.
           </li>
           <li>
-            <strong className="text-foreground">Communication metadata</strong>{" "}
-            — timestamps and technical headers associated with email
-            correspondence.
+            <strong className="text-foreground">Usage analytics</strong> —
+            aggregated page-view and performance metrics via Vercel Analytics
+            (typically without cookies).
           </li>
         </ul>
         <p>
-          This website does not currently use a contact form, newsletters,
-          user accounts, payment processing, or advertising trackers.
+          This website does not currently use a contact form, newsletters, user
+          accounts, payment processing, or advertising trackers.
         </p>
       </LegalSection>
 
@@ -92,15 +92,23 @@ export default function PrivacyPolicyPage() {
 
       <LegalSection title="5. Cookies and similar technologies">
         <p>
-          This site aims to operate without non-essential cookies. Essential
-          technical storage may be used by the hosting or delivery stack solely
-          to provide the service (for example load balancing or security). I do
-          not use analytics cookies, advertising cookies, or social-media
-          tracking pixels on this site at the time of this policy.
+          This site aims to operate without advertising cookies or social-media
+          tracking pixels. Essential technical storage may be used by the
+          hosting or delivery stack solely to provide the service (for example
+          load balancing or security).
         </p>
         <p>
-          If that changes, this policy will be updated and, where required by
-          law, consent will be obtained before non-essential cookies are set.
+          I use <strong className="text-foreground">Vercel Analytics</strong> to
+          understand aggregated page views and basic usage of the Site. Vercel
+          Analytics is designed to be privacy-friendly and typically does not
+          rely on browser cookies for its core metrics. Data is processed by
+          Vercel as a processor for the purpose of operating and improving this
+          website (Art. 6(1)(f) GDPR — legitimate interests).
+        </p>
+        <p>
+          If additional non-essential tracking is introduced later, this policy
+          will be updated and, where required by law, consent will be obtained
+          beforehand.
         </p>
       </LegalSection>
 
