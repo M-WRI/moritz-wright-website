@@ -27,8 +27,8 @@ export function JsonLd() {
       "Desktop Applications",
       "Open Source",
     ],
-    sameAs: [site.socials.github, site.socials.linkedin].filter(
-      (value): value is NonNullable<typeof value> => Boolean(value),
+    sameAs: [site.socials.github, site.socials.linkedin].flatMap((value) =>
+      value ? [value] : [],
     ),
   };
 
