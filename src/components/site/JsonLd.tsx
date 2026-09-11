@@ -28,7 +28,7 @@ export function JsonLd() {
       "Open Source",
     ],
     sameAs: [site.socials.github, site.socials.linkedin].filter(
-      (value): value is string => Boolean(value),
+      (value): value is NonNullable<typeof value> => Boolean(value),
     ),
   };
 
