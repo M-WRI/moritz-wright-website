@@ -1,6 +1,6 @@
 "use client";
 
-import type { Project } from "@/lib/content";
+import type { Project } from "@/lib/projects";
 import { getLenisInstance } from "@/lib/lenis";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";

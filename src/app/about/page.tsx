@@ -1,49 +1,70 @@
-import { BigTitle } from "@/components/site/BigTitle";
-import { about, approach, positioning, site } from "@/lib/content";
+import { about, approach } from "@/lib/content";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "About",
-  description: positioning,
+  description: about.body[0],
 };
 
 export default function AboutPage() {
   return (
-    <div className="pb-28">
-      <BigTitle as="h1">about</BigTitle>
-      <div className="mx-auto max-w-3xl px-5 md:px-10">
-        <p data-reveal className="text-sm lowercase text-muted">
-          {site.shortTitle}
-        </p>
-        <div className="mt-10 space-y-5 text-base leading-relaxed text-muted md:text-lg">
+    <div>
+      <section className="border-b border-border px-5 py-10 md:px-8 md:py-14">
+        <p className="meta text-muted">{about.kicker}</p>
+        <h1 className="display-section mt-4 max-w-4xl">{about.title}</h1>
+      </section>
+
+      <section className="border-b border-border px-5 py-10 md:px-8 md:py-14">
+        <div className="mx-auto max-w-3xl space-y-5">
           {about.body.map((paragraph) => (
-            <p key={paragraph} data-reveal>
+            <p
+              key={paragraph}
+              data-reveal
+              className="meta text-[0.8rem] leading-relaxed text-muted"
+            >
               {paragraph}
             </p>
           ))}
         </div>
-        <section className="mt-20">
-          <h2 data-reveal className="text-2xl tracking-[-0.03em]">
-            {approach.title}
-          </h2>
-          <dl className="mt-8 grid gap-8">
-            {approach.items.map((item) => (
-              <div key={item.title} data-reveal>
-                <dt>{item.title}</dt>
-                <dd className="mt-2 text-sm leading-relaxed text-muted">
-                  {item.body}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-        <p data-reveal className="mt-16 text-sm">
-          <Link href="/contact">work with me</Link>
-          <span className="text-muted"> · </span>
-          <Link href="/">view work</Link>
+      </section>
+
+      <section className="border-b border-border">
+        <div className="border-b border-border px-5 py-4 md:px-8">
+          <p className="meta">/ {approach.title}</p>
+        </div>
+        <div className="grid sm:grid-cols-2">
+          {approach.items.map((item, index) => (
+            <article
+              key={item.title}
+              data-reveal
+              className={`border-border px-5 py-8 md:px-8 ${index > 0 ? "border-t sm:border-t-0" : ""} ${index % 2 === 1 ? "sm:border-l" : ""} ${index > 1 ? "border-t" : ""}`}
+            >
+              <p className="meta text-muted">
+                {String(index + 1).padStart(2, "0")}
+              </p>
+              <h2 className="mt-3 font-display text-2xl uppercase tracking-[-0.03em]">
+                {item.title}
+              </h2>
+              <p className="meta mt-4 max-w-sm text-[0.75rem] leading-relaxed text-muted">
+                {item.body}
+              </p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="px-5 py-10 md:px-8">
+        <p data-reveal className="meta">
+          <Link href="/contact" className="hover:text-accent">
+            Work With Me ↗
+          </Link>
+          <span className="text-muted"> / </span>
+          <Link href="/projects" className="hover:text-accent">
+            View Work
+          </Link>
         </p>
-      </div>
+      </section>
     </div>
   );
 }

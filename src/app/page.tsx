@@ -4,9 +4,17 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: {
-    absolute: `${site.name} | Full-Stack Software Engineer`,
+    absolute: `${site.legalName} | Software Engineer`,
   },
   description: site.metadata.description,
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: `${site.legalName} | Software Engineer`,
+    description: site.metadata.description,
+    url: "/",
+  },
 };
 
 export default function Home() {

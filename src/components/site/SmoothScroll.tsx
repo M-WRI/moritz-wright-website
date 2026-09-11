@@ -50,29 +50,35 @@ export function SmoothScroll({
 
     const ctx = gsap.context(() => {
       const intro = document.querySelectorAll<HTMLElement>("[data-intro]");
-      if (intro.length) {
-        gsap.set(intro, { yPercent: reduce ? 0 : 110 });
-        gsap.to(intro, {
-          yPercent: 0,
-          duration: reduce ? 0 : 0.75,
-          stagger: 0.07,
-          ease: "power3.out",
-          delay: 0.08,
-        });
+      if (intro.length && !reduce) {
+        gsap.fromTo(
+          intro,
+          { yPercent: 110 },
+          {
+            yPercent: 0,
+            duration: 0.75,
+            stagger: 0.07,
+            ease: "power3.out",
+            delay: 0.08,
+          },
+        );
       }
 
       const introHero = document.querySelectorAll<HTMLElement>(
         "[data-intro-hero]",
       );
-      if (introHero.length) {
-        gsap.set(introHero, { yPercent: reduce ? 0 : 110 });
-        gsap.to(introHero, {
-          yPercent: 0,
-          duration: reduce ? 0 : 0.8,
-          stagger: 0.08,
-          ease: "power3.out",
-          delay: 0.55,
-        });
+      if (introHero.length && !reduce) {
+        gsap.fromTo(
+          introHero,
+          { yPercent: 110 },
+          {
+            yPercent: 0,
+            duration: 0.8,
+            stagger: 0.08,
+            ease: "power3.out",
+            delay: 0.2,
+          },
+        );
       }
 
       const reveals = document.querySelectorAll<HTMLElement>("[data-reveal]");

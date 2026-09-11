@@ -2,14 +2,14 @@ import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <div className="px-5 py-32 md:px-10">
-      <p className="display-title">404</p>
-      <p className="mt-6 text-muted">
+    <div className="border-b border-border px-5 py-24 md:px-8 md:py-32">
+      <p className="meta text-muted">Error</p>
+      <h1 className="display-section mt-4">404</h1>
+      <p className="meta mt-8 max-w-md text-muted">
         That route does not exist.{" "}
-        <Link href="/" className="text-foreground">
-          Back home
+        <Link href="/" className="text-foreground hover:text-accent">
+          Back home ↗
         </Link>
-        .
       </p>
     </div>
   );

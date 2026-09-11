@@ -1,4 +1,3 @@
-import { BigTitle } from "@/components/site/BigTitle";
 import { services } from "@/lib/content";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -11,31 +10,45 @@ export const metadata: Metadata = {
 
 export default function ServicesPage() {
   return (
-    <div className="pb-28">
-      <BigTitle as="h1">services</BigTitle>
-      <div className="mx-auto max-w-6xl px-5 md:px-10">
-        <p data-reveal className="max-w-xl text-base leading-relaxed text-muted">
+    <div>
+      <section className="border-b border-border px-5 py-10 md:px-8 md:py-14">
+        <p className="meta text-muted">Services</p>
+        <h1 className="display-section mt-4 max-w-4xl">{services.title}</h1>
+        <p
+          data-reveal
+          className="meta mt-8 max-w-xl text-[0.8rem] leading-relaxed text-muted"
+        >
           {services.intro}
         </p>
-        <div className="mt-16 grid gap-x-16 gap-y-14 sm:grid-cols-2">
-          {services.items.map((item, index) => (
-            <article key={item.slug} data-reveal>
-              <p className="text-[11px] lowercase text-muted">
-                {String(index + 1).padStart(2, "0")}
-              </p>
-              <h2 className="mt-2 text-3xl tracking-[-0.04em]">{item.title}</h2>
-              <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted">
-                {item.body}
-              </p>
-            </article>
-          ))}
-        </div>
-        <p data-reveal className="mt-16 text-sm text-muted">
-          <Link href="/contact" className="text-foreground">
-            start a conversation
+      </section>
+
+      <section className="grid border-b border-border sm:grid-cols-2 xl:grid-cols-3">
+        {services.items.map((item, index) => (
+          <article
+            key={item.slug}
+            data-reveal
+            className="border-b border-border px-5 py-8 last:border-b-0 sm:odd:border-r xl:border-r xl:[&:nth-child(3n)]:border-r-0 md:px-8 xl:[&:nth-last-child(-n+3)]:border-b-0"
+          >
+            <p className="meta text-muted">
+              {String(index + 1).padStart(2, "0")}
+            </p>
+            <h2 className="mt-3 font-display text-2xl uppercase tracking-[-0.03em]">
+              {item.title}
+            </h2>
+            <p className="meta mt-4 max-w-sm text-[0.75rem] leading-relaxed text-muted">
+              {item.body}
+            </p>
+          </article>
+        ))}
+      </section>
+
+      <section className="px-5 py-10 md:px-8">
+        <p data-reveal className="meta">
+          <Link href="/contact" className="hover:text-accent">
+            Start a Conversation ↗
           </Link>
         </p>
-      </div>
+      </section>
     </div>
   );
 }

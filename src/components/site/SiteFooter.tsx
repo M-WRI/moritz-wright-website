@@ -1,41 +1,48 @@
+import { SiteMark } from "@/components/site/SiteMark";
 import { site } from "@/lib/content";
 import Link from "next/link";
 
-const PHRASE = "Get in touch";
-
 export function SiteFooter() {
-  const year = new Date().getFullYear();
-  const copies = Array.from({ length: 8 }, (_, i) => `${PHRASE} ${i}`);
-
   return (
-    <footer className="relative">
-      <Link
-        href="/contact"
-        className="marquee group block py-8 md:py-12"
-        aria-label="Get in touch"
-      >
-        <div className="marquee-track">
-          <div className="flex">
-            {copies.map((key) => (
-              <span key={key} className="marquee-item">
-                {PHRASE}
-              </span>
-            ))}
-          </div>
-          <div className="flex" aria-hidden>
-            {copies.map((key) => (
-              <span key={`${key}-b`} className="marquee-item">
-                {PHRASE}
-              </span>
-            ))}
+    <footer className="border-t border-border bg-background">
+      <div className="flex flex-col gap-6 px-5 py-6 md:px-8">
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <Link href="/" className="shrink-0">
+            <span className="sr-only">{site.name}</span>
+            <SiteMark />
+          </Link>
+          <p className="meta text-muted md:text-center">
+            Building Useful Things.
+          </p>
+          <div className="flex items-center gap-3 md:justify-end">
+            <p className="meta text-muted">
+              {site.location} / {site.established}
+            </p>
+            <span
+              className="inline-block h-2 w-2 bg-foreground"
+              aria-hidden
+            />
           </div>
         </div>
-      </Link>
-      <div className="flex items-end justify-between px-5 pb-5 text-[11px] text-muted md:px-8">
-        <p>
-          © {site.name} {year}
-        </p>
-        <p className="max-w-[14rem] text-right lowercase">{site.shortTitle}</p>
+        <div className="flex flex-col gap-3 border-t border-border pt-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="meta text-muted">
+            © {new Date().getFullYear()} {site.legalName}
+          </p>
+          <nav aria-label="Legal" className="flex flex-wrap gap-4">
+            <Link href="/privacy" className="meta text-muted hover:text-foreground">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="meta text-muted hover:text-foreground">
+              Terms &amp; Conditions
+            </Link>
+            <a
+              href={`mailto:${site.email}`}
+              className="meta text-muted hover:text-foreground"
+            >
+              {site.email}
+            </a>
+          </nav>
+        </div>
       </div>
     </footer>
   );

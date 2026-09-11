@@ -1,4 +1,3 @@
-import { BigTitle } from "@/components/site/BigTitle";
 import { contact, site } from "@/lib/content";
 import type { Metadata } from "next";
 
@@ -9,32 +8,59 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <div className="pb-16">
-      <BigTitle as="h1">contact</BigTitle>
-      <div className="mx-auto max-w-3xl px-5 md:px-10">
-        <p data-reveal className="max-w-xl text-base leading-relaxed text-muted md:text-lg">
+    <div>
+      <section className="border-b border-border px-5 py-10 md:px-8 md:py-14">
+        <p className="meta text-muted">Contact</p>
+        <h1 className="display-section mt-4 max-w-4xl">{contact.title}</h1>
+        <p
+          data-reveal
+          className="meta mt-8 max-w-xl text-[0.8rem] leading-relaxed text-muted"
+        >
           {contact.body}
         </p>
-        <div data-reveal className="mt-10 space-y-4 text-sm">
-          <a href={`mailto:${site.email}`} className="block text-foreground">
+      </section>
+
+      <section className="grid border-b border-border md:grid-cols-2">
+        <div className="border-b border-border px-5 py-10 md:border-b-0 md:border-r md:px-8 md:py-14">
+          <p className="meta text-muted">/ Email</p>
+          <a
+            data-reveal
+            href={`mailto:${site.email}`}
+            className="mt-6 block font-display text-2xl uppercase tracking-[-0.03em] hover:text-accent md:text-3xl"
+          >
             {site.email}
           </a>
-          {site.socials.github ? (
-            <a href={site.socials.github} rel="noreferrer" target="_blank">
-              GitHub
-            </a>
-          ) : (
-            <p className="text-muted">GitHub</p>
-          )}
-          {site.socials.linkedin ? (
-            <a href={site.socials.linkedin} rel="noreferrer" target="_blank">
-              LinkedIn
-            </a>
-          ) : (
-            <p className="text-muted">LinkedIn</p>
-          )}
         </div>
-      </div>
+        <div className="px-5 py-10 md:px-8 md:py-14">
+          <p className="meta text-muted">/ Elsewhere</p>
+          <div data-reveal className="mt-6 space-y-3">
+            {site.socials.github ? (
+              <a
+                href={site.socials.github}
+                rel="noreferrer"
+                target="_blank"
+                className="meta block hover:text-accent"
+              >
+                GitHub ↗
+              </a>
+            ) : (
+              <p className="meta text-muted">GitHub — coming soon</p>
+            )}
+            {site.socials.linkedin ? (
+              <a
+                href={site.socials.linkedin}
+                rel="noreferrer"
+                target="_blank"
+                className="meta block hover:text-accent"
+              >
+                LinkedIn ↗
+              </a>
+            ) : (
+              <p className="meta text-muted">LinkedIn — coming soon</p>
+            )}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
