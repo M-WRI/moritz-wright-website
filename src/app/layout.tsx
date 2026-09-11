@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo_Black, IBM_Plex_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { JsonLd } from "@/components/site/JsonLd";
 import { SiteShell } from "@/components/site/SiteShell";
 import { site } from "@/lib/content";
@@ -116,6 +117,7 @@ export default function RootLayout({
         <JsonLd />
         <SiteShell>{children}</SiteShell>
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

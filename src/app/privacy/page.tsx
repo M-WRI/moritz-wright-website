@@ -55,7 +55,7 @@ export default function PrivacyPolicyPage() {
           <li>
             <strong className="text-foreground">Usage analytics</strong> —
             aggregated page-view and performance metrics via Vercel Analytics
-            (typically without cookies).
+            and Vercel Speed Insights (typically without cookies).
           </li>
         </ul>
         <p>
@@ -98,12 +98,13 @@ export default function PrivacyPolicyPage() {
           load balancing or security).
         </p>
         <p>
-          I use <strong className="text-foreground">Vercel Analytics</strong> to
-          understand aggregated page views and basic usage of the Site. Vercel
-          Analytics is designed to be privacy-friendly and typically does not
-          rely on browser cookies for its core metrics. Data is processed by
-          Vercel as a processor for the purpose of operating and improving this
-          website (Art. 6(1)(f) GDPR — legitimate interests).
+          I use <strong className="text-foreground">Vercel Analytics</strong> and{" "}
+          <strong className="text-foreground">Vercel Speed Insights</strong> to
+          understand aggregated page views, basic usage, and real-world
+          performance of the Site. Both are designed to be privacy-friendly and
+          typically do not rely on browser cookies for their core metrics. Data
+          is processed by Vercel as a processor for the purpose of operating and
+          improving this website (Art. 6(1)(f) GDPR — legitimate interests).
         </p>
         <p>
           If additional non-essential tracking is introduced later, this policy
