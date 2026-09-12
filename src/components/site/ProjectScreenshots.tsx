@@ -57,12 +57,12 @@ export function ProjectScreenshots({
             key={`${shot.label}-${index}-${i}`}
             className={`border-border bg-card p-4 md:p-5 ${i > 0 ? "border-t md:border-t-0 md:border-l" : ""}`}
           >
-            <div className="relative aspect-[4/3] overflow-hidden border border-border/40 bg-background shadow-[0_12px_40px_rgba(0,0,0,0.08)]">
+            <div className="relative aspect-square overflow-hidden border border-border/40 bg-surface-dark shadow-[0_12px_40px_rgba(0,0,0,0.08)]">
               <Image
                 src={shot.src}
                 alt={shot.label}
                 fill
-                className="object-cover"
+                className="object-contain p-2 md:p-3"
                 sizes="(max-width: 768px) 100vw, 33vw"
               />
             </div>

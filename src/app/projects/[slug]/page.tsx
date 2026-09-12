@@ -109,7 +109,7 @@ export default async function ProjectPage({ params }: Props) {
               alt={`${project.title} preview`}
               fill
               priority
-              className="object-cover"
+              className="object-contain p-4 md:p-6"
               sizes="(max-width: 1024px) 100vw, 50vw"
             />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10" />
