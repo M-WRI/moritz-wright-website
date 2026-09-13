@@ -12,7 +12,7 @@ tags:
 year: 2026
 featured: true
 image: /images/korigio-mark.png
-heroImage: /images/korigio-hero.png
+heroImage: /images/korigio-hero.jpg
 darkThumb: true
 github: https://github.com/Korigio/korigio-desktop-app
 demo: https://www.korigio.com/
@@ -38,17 +38,7 @@ tech:
     detail: Local Database
   - name: Open Source
     detail: Free · No Account · No Subscription
-screenshots:
-  - src: /images/korigio-shot-01.png
-    label: Dashboard
-  - src: /images/korigio-shot-02.png
-    label: Repair intake
-  - src: /images/korigio-shot-03.png
-    label: Repair overview
-  - src: /images/korigio-shot-04.png
-    label: Companies
-  - src: /images/korigio-shot-05.png
-    label: Company profile
+screenshots: []
 ---
 
 Open-source desktop software for independent repair shops — customers, devices, repairs, diagnosis, print, and Wi-Fi team sync on the counter PC. Free. Your data stays local.
