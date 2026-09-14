@@ -8,7 +8,7 @@ import type { ReactNode } from "react";
 
 export function SiteShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  //test
+  //test1
   return (
     <SmoothScroll pathname={pathname}>
       <a
