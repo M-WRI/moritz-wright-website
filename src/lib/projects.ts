@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
+import { sortProjectsLatest } from "@/lib/project-utils";
 
 export type ProjectFeature = {
   title: string;
@@ -121,6 +122,10 @@ export function getProjects(): Project[] {
     .filter((file) => file.endsWith(".md") && !file.startsWith("_"))
     .map(loadProjectFile)
     .sort((a, b) => a.number.localeCompare(b.number));
+}
+
+export function getRecentProjects(limit = 5): Project[] {
+  return sortProjectsLatest(getProjects()).slice(0, limit);
 }
 
 export function getProject(slug: string): Project | undefined {

@@ -66,6 +66,19 @@ body::before {
   font-family: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
 }
 
+.contact-copy {
+  container-type: inline-size;
+}
+
+.display-contact {
+  font-family: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(2.5rem, 13.2cqw, 5.75rem);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  line-height: 0.88;
+  text-transform: uppercase;
+}
+
 .display-hero {
   font-family: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
   font-size: clamp(3.4rem, 11vw, 7.5rem);
@@ -181,6 +194,15 @@ body::before {
 .nav-link.is-active::after {
   transform: scaleX(1);
   transform-origin: left center;
+}
+
+.nav-link.is-active {
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border);
+}
+
+.nav-link.is-active::after {
+  display: none;
 }
 
 .site-logo {

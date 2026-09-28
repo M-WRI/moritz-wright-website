@@ -1,11 +1,13 @@
-import { SiteMark } from "@/components/site/SiteMark";
+import { HomeContactSection } from "@/components/home/HomeContactSection";
+import { ProjectGallery } from "@/components/site/ProjectGallery";
 import { hero, philosophy } from "@/lib/content";
-import { featuredProjects } from "@/lib/projects";
+import { featuredProjects, getRecentProjects } from "@/lib/projects";
 import Image from "next/image";
 import Link from "next/link";
 
 export function HomePage() {
   const featured = featuredProjects().slice(0, 4);
+  const recentProjects = getRecentProjects(5);
 
   return (
     <>
@@ -37,16 +39,10 @@ export function HomePage() {
             </div>
           </div>
 
-          <div className="relative min-h-[420px] overflow-hidden bg-[#6a6a6a] lg:min-h-full">
-            <ul className="meta absolute right-5 top-5 text-right text-white md:right-8 md:top-8">
-              {hero.imageOverlays.top.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-            <p className="meta absolute bottom-5 right-5 text-right text-white md:bottom-8 md:right-8">
-              {hero.imageOverlays.bottom}
-            </p>
-          </div>
+          <ProjectGallery
+            projects={recentProjects}
+            className="min-h-[420px] lg:min-h-full"
+          />
         </div>
       </section>
 
@@ -111,7 +107,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="grid border-b border-border lg:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)_minmax(0,0.9fr)]">
+      <section className="grid border-b border-border lg:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)]">
         <div className="border-b border-border px-5 py-10 md:px-8 md:py-14 lg:border-b-0 lg:border-r">
           <h2 className="display-section max-w-full break-words">
             {philosophy.lines.map((line) => (
@@ -122,7 +118,7 @@ export function HomePage() {
           </h2>
         </div>
 
-        <div className="flex flex-col justify-between gap-10 border-b border-border px-5 py-10 md:px-8 md:py-14 lg:border-b-0 lg:border-r">
+        <div className="flex flex-col justify-between gap-10 px-5 py-10 md:px-8 md:py-14">
           <p
             data-reveal
             className="meta max-w-md text-[0.75rem] leading-relaxed text-muted"
@@ -136,25 +132,9 @@ export function HomePage() {
             </Link>
           </div>
         </div>
-
-        <div className="flex flex-col justify-between gap-16 bg-surface-dark px-5 py-10 text-surface-dark-fg md:px-8 md:py-14">
-          <ul data-reveal className="space-y-2">
-            {philosophy.interests.map((item) => (
-              <li key={item} className="meta text-surface-dark-fg">
-                {item}
-              </li>
-            ))}
-          </ul>
-          <div data-reveal className="flex items-end justify-between gap-4">
-            <SiteMark variant="light" />
-            <p className="meta text-right text-surface-dark-fg/70">
-              Berlin • Managua
-              <br />
-              Est. 1988
-            </p>
-          </div>
-        </div>
       </section>
+
+      <HomeContactSection />
     </>
   );
 }

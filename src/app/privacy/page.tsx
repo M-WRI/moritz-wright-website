@@ -49,8 +49,9 @@ export default function PrivacyPolicyPage() {
           </li>
           <li>
             <strong className="text-foreground">Contact data</strong> — if you
-            email me (for example at {site.email}), the content of your message
-            and your email address, plus any other details you choose to include.
+            use the contact form or email me (for example at {site.email}), your
+            name, email address, message content, and any other details you
+            choose to include.
           </li>
           <li>
             <strong className="text-foreground">Usage analytics</strong> —
@@ -59,8 +60,8 @@ export default function PrivacyPolicyPage() {
           </li>
         </ul>
         <p>
-          This website does not currently use a contact form, newsletters, user
-          accounts, payment processing, or advertising trackers.
+          This website does not use newsletters, user accounts, payment
+          processing, or advertising trackers.
         </p>
       </LegalSection>
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { ProjectGallery } from "@/components/site/ProjectGallery";
+import { takeRecentProjects } from "@/lib/project-utils";
 import type { Project } from "@/lib/projects";
 import Image from "next/image";
 import Link from "next/link";
@@ -7,16 +9,10 @@ import { useMemo, useState } from "react";
 
 type SortMode = "latest" | "oldest" | "az";
 
-function ProjectThumb({ project, size = "md" }: { project: Project; size?: "md" | "sm" }) {
-  const padding = size === "sm" ? "p-5" : "p-6 md:p-8";
-  const logoClass =
-    size === "sm"
-      ? "h-auto w-[34%] max-w-[3.75rem] object-contain opacity-95 transition duration-500 ease-out group-hover:scale-110 group-hover:opacity-100"
-      : "h-auto w-[34%] max-w-[5rem] object-contain opacity-95 transition duration-500 ease-out group-hover:scale-110 group-hover:opacity-100";
-
+function ProjectThumb({ project }: { project: Project }) {
   return (
     <div
-      className={`relative aspect-square shrink-0 overflow-hidden ${project.darkThumb ? "bg-black" : "bg-card"} ${size === "sm" ? "w-24 sm:w-28" : "w-28 sm:w-40"}`}
+      className={`relative aspect-square w-28 shrink-0 overflow-hidden sm:w-40 ${project.darkThumb ? "bg-black" : "bg-card"}`}
     >
       <span className="meta absolute left-2.5 top-2.5 z-10 text-white/90">
         {project.number}
@@ -28,13 +24,13 @@ function ProjectThumb({ project, size = "md" }: { project: Project; size?: "md" 
           </span>
         </div>
       ) : project.darkThumb ? (
-        <div className={`flex h-full items-center justify-center bg-black ${padding}`}>
+        <div className="flex h-full items-center justify-center bg-black p-6 md:p-8">
           <Image
             src={project.image}
             alt={project.title}
             width={160}
             height={160}
-            className={logoClass}
+            className="h-auto w-[34%] max-w-[5rem] object-contain opacity-95 transition duration-500 ease-out group-hover:scale-110 group-hover:opacity-100"
           />
         </div>
       ) : (
@@ -50,36 +46,26 @@ function ProjectThumb({ project, size = "md" }: { project: Project; size?: "md" 
   );
 }
 
-function ProjectRowCard({
-  project,
-  compact = false,
-}: {
-  project: Project;
-  compact?: boolean;
-}) {
+function ProjectRowCard({ project }: { project: Project }) {
   return (
     <Link
       href={`/projects/${project.slug}`}
       className="group flex gap-4 sm:gap-5"
     >
-      <ProjectThumb project={project} size={compact ? "sm" : "md"} />
+      <ProjectThumb project={project} />
       <div className="flex min-w-0 flex-1 flex-col justify-between gap-3 py-0.5">
         <div>
           <div className="flex items-baseline justify-between gap-3">
-            <h3
-              className={`font-display uppercase tracking-[-0.03em] ${compact ? "text-lg" : "text-xl md:text-2xl"}`}
-            >
+            <h3 className="font-display text-xl uppercase tracking-[-0.03em] md:text-2xl">
               {project.title}
             </h3>
             <span className="meta shrink-0 text-muted">{project.year}</span>
           </div>
-          <p
-            className={`meta mt-2 leading-relaxed text-muted ${compact ? "line-clamp-2 text-[0.65rem]" : "line-clamp-3 text-[0.7rem]"}`}
-          >
+          <p className="meta mt-2 line-clamp-3 text-[0.7rem] leading-relaxed text-muted">
             {project.oneLiner}
           </p>
           <ul className="mt-3 flex flex-wrap gap-1.5">
-            {project.tags.slice(0, compact ? 3 : 4).map((tag) => (
+            {project.tags.slice(0, 4).map((tag) => (
               <li
                 key={tag}
                 className="border border-border/70 bg-card px-1.5 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.06em]"
@@ -116,6 +102,11 @@ export function WorkArchive({ projects }: { projects: Project[] }) {
     ];
   }, [projects]);
 
+  const galleryProjects = useMemo(
+    () => takeRecentProjects(projects, 5),
+    [projects],
+  );
+
   const filtered = useMemo(() => {
     const list =
       filter === "All"
@@ -135,15 +126,6 @@ export function WorkArchive({ projects }: { projects: Project[] }) {
     return list;
   }, [projects, filter, sort]);
 
-  const featured = filtered.filter((project) => project.featured).slice(0, 3);
-  const years = projects.map((project) => project.year).sort();
-  const yearSpan =
-    years.length === 0
-      ? ""
-      : years[0] === years[years.length - 1]
-        ? years[0]
-        : `${years[0]} – ${years[years.length - 1]}`;
-
   return (
     <div>
       <section className="border-b border-border">
@@ -160,23 +142,9 @@ export function WorkArchive({ projects }: { projects: Project[] }) {
                 projects.
               </p>
             </div>
-            <p className="meta border-t border-border pt-4 text-muted">
-              {String(projects.length).padStart(2, "0")} Projects
-              {yearSpan ? ` / ${yearSpan}` : ""} / Building Always
-            </p>
           </div>
 
-          <div className="relative min-h-[280px] overflow-hidden bg-[#6a6a6a] lg:min-h-full">
-            <ul className="meta absolute right-5 top-5 text-right text-white md:right-8 md:top-8">
-              <li>Ideas</li>
-              <li>Code</li>
-              <li>Systems</li>
-              <li>Real Impact</li>
-            </ul>
-            <p className="meta absolute bottom-5 right-5 text-right text-white md:bottom-8 md:right-8">
-              Berlin • Managua
-            </p>
-          </div>
+          <ProjectGallery projects={galleryProjects} />
         </div>
       </section>
 
@@ -214,32 +182,12 @@ export function WorkArchive({ projects }: { projects: Project[] }) {
         </label>
       </section>
 
-      {featured.length > 0 ? (
-        <section className="border-b border-border">
-          <div className="border-b border-border px-5 py-4 md:px-8">
-            <p className="meta">01 / Featured Projects</p>
-          </div>
+      <section>
+        {filtered.length > 0 ? (
           <div className="grid gap-4 p-4 md:gap-5 md:p-5 lg:grid-cols-3">
-            {featured.map((project) => (
+            {filtered.map((project) => (
               <div key={project.slug}>
                 <ProjectRowCard project={project} />
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      <section>
-        <div className="border-b border-border px-5 py-4 md:px-8">
-          <p className="meta">
-            02 / All Projects ({String(filtered.length).padStart(2, "0")})
-          </p>
-        </div>
-        {filtered.length > 0 ? (
-          <div className="grid gap-4 p-4 md:gap-5 md:p-5 sm:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((project) => (
-              <div key={`all-${project.slug}`}>
-                <ProjectRowCard project={project} compact />
               </div>
             ))}
           </div>
