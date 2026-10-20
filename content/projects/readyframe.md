@@ -14,9 +14,10 @@ featured: true
 image: /images/readyframe.jpg
 heroImage: /images/readyframe.jpg
 imageFit: contain
+imageBg: "#03091d"
 darkThumb: false
 github: https://github.com/M-WRI/readyframe
-demo:
+demo: https://www.npmjs.com/package/create-readyframe
 overlay: Scaffold into Ship.
 aboutHeading: Start past the empty repo.
 features:

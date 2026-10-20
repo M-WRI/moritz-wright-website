@@ -104,7 +104,8 @@ export default async function ProjectPage({ params }: Props) {
           </div>
 
           <div
-            className={`relative min-h-[420px] overflow-hidden lg:min-h-full ${project.imageFit === "contain" ? "bg-black" : "bg-surface-dark"}`}
+            className={`relative min-h-[420px] overflow-hidden lg:min-h-full ${project.imageBg ? "" : project.imageFit === "contain" ? "bg-black" : "bg-surface-dark"}`}
+            style={project.imageBg ? { backgroundColor: project.imageBg } : undefined}
           >
             <Image
               src={project.heroImage}

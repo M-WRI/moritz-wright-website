@@ -64,7 +64,8 @@ export function HomePage() {
             >
               <article className="flex h-full flex-col bg-background">
                 <div
-                  className={`relative aspect-[4/3] overflow-hidden ${project.darkThumb || project.imageFit === "contain" ? "bg-black" : "bg-card"}`}
+                  className={`relative aspect-[4/3] overflow-hidden ${project.imageBg ? "" : project.darkThumb || project.imageFit === "contain" ? "bg-black" : "bg-card"}`}
+                  style={project.imageBg ? { backgroundColor: project.imageBg } : undefined}
                 >
                   {project.darkThumb && project.logoText ? (
                     <div className="flex h-full items-center justify-center">

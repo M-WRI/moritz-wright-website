@@ -7,7 +7,8 @@ export function ProjectCard({ project }: { project: Project }) {
     <article data-reveal className="group flex h-full flex-col border border-border">
       <Link
         href={`/projects/${project.slug}`}
-        className={`relative block aspect-[16/10] overflow-hidden ${project.darkThumb || project.imageFit === "contain" ? "bg-black" : "bg-card"}`}
+        className={`relative block aspect-[16/10] overflow-hidden ${project.imageBg ? "" : project.darkThumb || project.imageFit === "contain" ? "bg-black" : "bg-card"}`}
+        style={project.imageBg ? { backgroundColor: project.imageBg } : undefined}
       >
         {project.darkThumb && project.logoText ? (
           <div className="flex h-full items-center justify-center">

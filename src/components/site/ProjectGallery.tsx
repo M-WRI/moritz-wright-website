@@ -124,7 +124,8 @@ export function ProjectGallery({
 
   return (
     <div
-      className={`relative min-h-[280px] overflow-hidden lg:min-h-full ${project.imageFit === "contain" || project.darkThumb ? "bg-black" : "bg-[#6a6a6a]"} ${className}`.trim()}
+      className={`relative min-h-[280px] overflow-hidden lg:min-h-full ${project.imageBg ? "" : project.imageFit === "contain" || project.darkThumb ? "bg-black" : "bg-[#6a6a6a]"} ${className}`.trim()}
+      style={project.imageBg ? { backgroundColor: project.imageBg } : undefined}
       onMouseEnter={() => {
         paused.current = true;
       }}

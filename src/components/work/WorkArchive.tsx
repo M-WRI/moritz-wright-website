@@ -12,7 +12,8 @@ type SortMode = "latest" | "oldest" | "az";
 function ProjectThumb({ project }: { project: Project }) {
   return (
     <div
-      className={`relative aspect-square w-28 shrink-0 overflow-hidden sm:w-40 ${project.darkThumb || project.imageFit === "contain" ? "bg-black" : "bg-card"}`}
+      className={`relative aspect-square w-28 shrink-0 overflow-hidden sm:w-40 ${project.imageBg ? "" : project.darkThumb || project.imageFit === "contain" ? "bg-black" : "bg-card"}`}
+      style={project.imageBg ? { backgroundColor: project.imageBg } : undefined}
     >
       <span className="meta absolute left-2.5 top-2.5 z-10 text-white/90">
         {project.number}
