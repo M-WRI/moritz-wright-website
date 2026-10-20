@@ -7,7 +7,7 @@ export function ProjectCard({ project }: { project: Project }) {
     <article data-reveal className="group flex h-full flex-col border border-border">
       <Link
         href={`/projects/${project.slug}`}
-        className={`relative block aspect-[16/10] overflow-hidden ${project.darkThumb ? "bg-surface-dark" : "bg-card"}`}
+        className={`relative block aspect-[16/10] overflow-hidden ${project.darkThumb || project.imageFit === "contain" ? "bg-black" : "bg-card"}`}
       >
         {project.darkThumb && project.logoText ? (
           <div className="flex h-full items-center justify-center">
@@ -30,7 +30,11 @@ export function ProjectCard({ project }: { project: Project }) {
             src={project.image}
             alt={project.title}
             fill
-            className="object-cover grayscale transition-transform duration-500 group-hover:scale-[1.03]"
+            className={
+              project.imageFit === "contain"
+                ? "object-contain transition-transform duration-500 group-hover:scale-[1.03]"
+                : "object-cover grayscale transition-transform duration-500 group-hover:scale-[1.03]"
+            }
             sizes="(max-width: 768px) 100vw, 33vw"
           />
         )}

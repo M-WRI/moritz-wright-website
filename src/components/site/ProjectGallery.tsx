@@ -3,9 +3,10 @@
 import type { Project } from "@/lib/projects";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const FADE_MS = 400;
+const ROTATE_MS = 6000;
 
 function GallerySlide({ project }: { project: Project }) {
   return (
@@ -28,6 +29,15 @@ function GallerySlide({ project }: { project: Project }) {
             priority
           />
         </div>
+      ) : project.imageFit === "contain" ? (
+        <Image
+          src={project.image}
+          alt=""
+          fill
+          className="object-contain"
+          sizes="(max-width: 1024px) 100vw, 50vw"
+          priority
+        />
       ) : (
         <Image
           src={project.image}
@@ -51,6 +61,8 @@ export function ProjectGallery({
 }) {
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(true);
+  const paused = useRef(false);
+  const fadeTimer = useRef<number | null>(null);
   const canNavigate = projects.length > 1;
   const useFade = projects.length > 1;
 
@@ -65,19 +77,37 @@ export function ProjectGallery({
     (delta: -1 | 1) => {
       if (!canNavigate) return;
 
+      if (fadeTimer.current) {
+        window.clearTimeout(fadeTimer.current);
+        fadeTimer.current = null;
+      }
+
       if (!useFade) {
         setIndex((current) => (current + delta + projects.length) % projects.length);
         return;
       }
 
       setVisible(false);
-      window.setTimeout(() => {
+      fadeTimer.current = window.setTimeout(() => {
         setIndex((current) => (current + delta + projects.length) % projects.length);
         setVisible(true);
+        fadeTimer.current = null;
       }, FADE_MS);
     },
     [canNavigate, projects.length, useFade],
   );
+
+  useEffect(() => {
+    if (!canNavigate) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const id = window.setInterval(() => {
+      if (document.hidden || paused.current) return;
+      go(1);
+    }, ROTATE_MS);
+
+    return () => window.clearInterval(id);
+  }, [canNavigate, go]);
 
   if (!project) {
     return (
@@ -94,7 +124,13 @@ export function ProjectGallery({
 
   return (
     <div
-      className={`relative min-h-[280px] overflow-hidden bg-[#6a6a6a] lg:min-h-full ${className}`.trim()}
+      className={`relative min-h-[280px] overflow-hidden lg:min-h-full ${project.imageFit === "contain" || project.darkThumb ? "bg-black" : "bg-[#6a6a6a]"} ${className}`.trim()}
+      onMouseEnter={() => {
+        paused.current = true;
+      }}
+      onMouseLeave={() => {
+        paused.current = false;
+      }}
       aria-roledescription="carousel"
       aria-label="Recent projects"
     >

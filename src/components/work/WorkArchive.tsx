@@ -12,7 +12,7 @@ type SortMode = "latest" | "oldest" | "az";
 function ProjectThumb({ project }: { project: Project }) {
   return (
     <div
-      className={`relative aspect-square w-28 shrink-0 overflow-hidden sm:w-40 ${project.darkThumb ? "bg-black" : "bg-card"}`}
+      className={`relative aspect-square w-28 shrink-0 overflow-hidden sm:w-40 ${project.darkThumb || project.imageFit === "contain" ? "bg-black" : "bg-card"}`}
     >
       <span className="meta absolute left-2.5 top-2.5 z-10 text-white/90">
         {project.number}
@@ -38,7 +38,11 @@ function ProjectThumb({ project }: { project: Project }) {
           src={project.image}
           alt={project.title}
           fill
-          className="object-cover grayscale transition duration-500 group-hover:scale-[1.04]"
+          className={
+            project.imageFit === "contain"
+              ? "object-contain transition duration-500 group-hover:scale-[1.04]"
+              : "object-cover grayscale transition duration-500 group-hover:scale-[1.04]"
+          }
           sizes="160px"
         />
       )}

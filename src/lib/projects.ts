@@ -32,6 +32,7 @@ export type Project = {
   placeholder: boolean;
   image: string;
   heroImage: string;
+  imageFit: "cover" | "contain";
   logoText?: string;
   darkThumb?: boolean;
   github: string | null;
@@ -56,6 +57,7 @@ type ProjectFrontmatter = {
   placeholder?: boolean;
   image: string;
   heroImage: string;
+  imageFit?: "cover" | "contain";
   logoText?: string;
   darkThumb?: boolean;
   github?: string | null;
@@ -101,6 +103,7 @@ function loadProjectFile(filename: string): Project {
     placeholder: frontmatter.placeholder ?? false,
     image: frontmatter.image,
     heroImage: frontmatter.heroImage,
+    imageFit: frontmatter.imageFit === "contain" ? "contain" : "cover",
     logoText: frontmatter.logoText,
     darkThumb: frontmatter.darkThumb ?? false,
     github: frontmatter.github ?? null,

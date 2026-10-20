@@ -64,7 +64,7 @@ export function HomePage() {
             >
               <article className="flex h-full flex-col bg-background">
                 <div
-                  className={`relative aspect-[4/3] overflow-hidden ${project.darkThumb ? "bg-black" : "bg-card"}`}
+                  className={`relative aspect-[4/3] overflow-hidden ${project.darkThumb || project.imageFit === "contain" ? "bg-black" : "bg-card"}`}
                 >
                   {project.darkThumb && project.logoText ? (
                     <div className="flex h-full items-center justify-center">
@@ -88,7 +88,11 @@ export function HomePage() {
                       src={project.image}
                       alt={project.title}
                       fill
-                      className="object-cover grayscale transition duration-500 ease-out group-hover:scale-[1.04]"
+                      className={
+                        project.imageFit === "contain"
+                          ? "object-contain transition duration-500 ease-out group-hover:scale-[1.04]"
+                          : "object-cover grayscale transition duration-500 ease-out group-hover:scale-[1.04]"
+                      }
                       sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
                     />
                   )}

@@ -103,13 +103,15 @@ export default async function ProjectPage({ params }: Props) {
             </div>
           </div>
 
-          <div className="relative min-h-[420px] overflow-hidden bg-surface-dark lg:min-h-full">
+          <div
+            className={`relative min-h-[420px] overflow-hidden lg:min-h-full ${project.imageFit === "contain" ? "bg-black" : "bg-surface-dark"}`}
+          >
             <Image
               src={project.heroImage}
               alt={`${project.title} preview`}
               fill
               priority
-              className="object-cover"
+              className={project.imageFit === "contain" ? "object-contain" : "object-cover"}
               sizes="(max-width: 1024px) 100vw, 50vw"
             />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10" />

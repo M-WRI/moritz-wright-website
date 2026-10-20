@@ -131,7 +131,11 @@ function PosterSet({
                       src={project.image}
                       alt={project.title}
                       fill
-                      className="object-cover grayscale transition duration-700 group-hover:grayscale-0"
+                      className={
+                        project.imageFit === "contain"
+                          ? "object-contain transition duration-700"
+                          : "object-cover grayscale transition duration-700 group-hover:grayscale-0"
+                      }
                       sizes="(max-width: 768px) 42vw, 32vw"
                     />
                   </div>
